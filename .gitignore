@@ -26,6 +26,7 @@ tags
 Makefile*
 *.prl
 *.app
+*_autogen/
 moc_*.cpp
 ui_*.h
 qrc_*.cpp
@@ -36,6 +37,12 @@ Thumbs.db
 /.qmake.stash
 **/.qmlls.ini
 
+# Cmake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
 # qtcreator generated files
 *.pro.user*
 *.qbs.user*
@@ -45,7 +52,7 @@ CMakeLists.txt.user*
 *.flc
 
 # Vim temporary files
-.*.swp
+*.swp
 
 # Visual Studio generated files
 *.ib_pdb_index
@@ -80,5 +87,8 @@ CMakeLists.txt.user*
 .pch/
 .rcc/
 .uic/
-/build*/
+build/
+build-*/
+cmake-build-*/
+
 /.qtcreator/
