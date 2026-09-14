@@ -10,7 +10,8 @@ qt_add_executable(VoidTeX
     main.cpp
     mainwindow.cpp
     mainwindow.h
-
+    editor.cpp
+    editor.h
 )
 
 target_link_libraries(VoidTeX

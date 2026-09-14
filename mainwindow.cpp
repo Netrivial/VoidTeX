@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "editor.h"
 
 #include <QAction>
 #include <QApplication>
@@ -28,8 +29,7 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::createCentralAndDocks()
 {
-    m_editor = new QPlainTextEdit(this);
-    m_editor->setPlaceholderText(tr("Здесь будет редактор LaTeX..."));
+    m_editor = new Editor(this);
     setCentralWidget(m_editor);
 
     m_log = new QPlainTextEdit(this);

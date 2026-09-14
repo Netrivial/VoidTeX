@@ -6,6 +6,7 @@
 class QAction;
 class QDockWidget;
 class QPlainTextEdit;
+class Editor;
 
 class MainWindow : public QMainWindow
 {
@@ -41,7 +42,7 @@ private:
     QAction *m_actionAboutQt = nullptr;
 
     // Widgets
-    QPlainTextEdit *m_editor = nullptr;
+    Editor         *m_editor = nullptr;
     QPlainTextEdit *m_log    = nullptr;
     QDockWidget    *m_logDock = nullptr;
 };
