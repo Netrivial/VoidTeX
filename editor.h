@@ -1,6 +1,8 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include "src/settings.h"
+
 #include <QPlainTextEdit>
 
 class Editor;
@@ -39,6 +41,7 @@ private slots:
 
 private:
     LineNumberArea *m_lineNumberArea;
+    CurrentLineHighlight m_highlightMode = CurrentLineHighlight::Both;
 };
 
 #endif // EDITOR_H

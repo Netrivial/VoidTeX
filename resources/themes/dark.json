@@ -1,0 +1,18 @@
+{
+    "name": "Dark",
+    "colors": {
+        "editorBg":            "#1e1e1e",
+        "editorFg":            "#d4d4d4",
+        "editorSelection":     "#264f78",
+        "currentLineBg":       "#2a2a2a",
+        "currentLineNumberFg": "#ffffff",
+        "lineNumberBg":        "#252526",
+        "lineNumberFg":        "#858585",
+        "lineNumberBorder":    "#333333"
+    },
+    "sizes": {
+        "fontPointSize":       12,
+        "lineNumberPadding":   12,
+        "tabWidthInSpaces":    4
+    }
+}

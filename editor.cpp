@@ -1,4 +1,5 @@
 #include "editor.h"
+#include "src/thememanager.h"
 
 #include <QFontDatabase>
 #include <QPainter>
@@ -28,11 +29,24 @@ Editor::Editor(QWidget *parent)
     : QPlainTextEdit(parent)
     , m_lineNumberArea(new LineNumberArea(this))
 {
+    auto &tm = ThemeManager::instance();
+
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    f.setPointSize(11);
+    f.setPointSize(tm.size("fontPointSize"));
     setFont(f);
 
-    setTabStopDistance(4 * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
+    setTabStopDistance(tm.size("tabWidthInSpaces")
+                       * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
+
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base,  tm.color("editorBg"));
+    pal.setColor(QPalette::Text,  tm.color("editorFg"));
+    pal.setColor(QPalette::Highlight, tm.color("editorSelection"));
+    setPalette(pal);
+
+    QSettings s;
+    m_highlightMode = currentLineHighlightFromString(
+        s.value(SettingsKeys::CurrentLineMode, "both").toString());
 
     connect(this, &Editor::blockCountChanged,
             this, &Editor::updateLineNumberAreaWidth);
@@ -49,12 +63,10 @@ int Editor::lineNumberAreaWidth() const
 {
     int digits = 1;
     int max = qMax(1, blockCount());
-    while (max >= 10) {
-        max /= 10;
-        ++digits;
-    }
+    while (max >= 10) { max /= 10; ++digits; }
 
-    const int space = 12 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    const int padding = ThemeManager::instance().size("lineNumberPadding");
+    const int space = padding + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
     return space;
 }
 
@@ -87,11 +99,19 @@ void Editor::resizeEvent(QResizeEvent *event)
 
 void Editor::highlightCurrentLine()
 {
+    const bool wantBackground =
+        (m_highlightMode == CurrentLineHighlight::LineBackground ||
+         m_highlightMode == CurrentLineHighlight::Both);
+
+    const bool wantNumber =
+        (m_highlightMode == CurrentLineHighlight::LineNumberOnly ||
+         m_highlightMode == CurrentLineHighlight::Both);
+
     QList<QTextEdit::ExtraSelection> selections;
 
-    if (!isReadOnly()) {
+    if (wantBackground && !isReadOnly()) {
         QTextEdit::ExtraSelection sel;
-        sel.format.setBackground(QColor(0x78, 0x78, 0x77));
+        sel.format.setBackground(ThemeManager::instance().color("currentLineBg"));
         sel.format.setProperty(QTextFormat::FullWidthSelection, true);
         sel.cursor = textCursor();
         sel.cursor.clearSelection();
@@ -99,23 +119,38 @@ void Editor::highlightCurrentLine()
     }
 
     setExtraSelections(selections);
+
+    if (wantNumber || m_highlightMode == CurrentLineHighlight::None)
+        m_lineNumberArea->update();
 }
 
 void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
+    auto &tm = ThemeManager::instance();
+
     QPainter painter(m_lineNumberArea);
-    painter.fillRect(event->rect(), QColor(0x36, 0x36, 0x36));
+    painter.fillRect(event->rect(), tm.color("lineNumberBg"));
+
+    const bool highlightNumber =
+        (m_highlightMode == CurrentLineHighlight::LineNumberOnly ||
+         m_highlightMode == CurrentLineHighlight::Both);
+
+    const int currentLine = textCursor().blockNumber();
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
     int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
     int bottom = top + qRound(blockBoundingRect(block).height());
 
-    painter.setPen(QColor(0xbd, 0xbd, 0xbd));
+    const QColor normalColor = tm.color("lineNumberFg");
+    const QColor activeColor = tm.color("currentLineNumberFg");
 
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
             const QString number = QString::number(blockNumber + 1);
+            painter.setPen(highlightNumber && blockNumber == currentLine
+                               ? activeColor
+                               : normalColor);
             painter.drawText(0, top,
                              m_lineNumberArea->width() - 6,
                              fontMetrics().height(),
