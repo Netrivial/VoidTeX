@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("VoidTeX");
 
     QSettings s;
-    const QString themeName = s.value(SettingsKeys::ThemeName, "dark").toString();
+    // const QString themeName = s.value(SettingsKeys::ThemeName, "dark").toString();
+const QString themeName = s.value(SettingsKeys::ThemeName, "light").toString(); 
     QSettings().setValue(SettingsKeys::CurrentLineMode, "none");
     ThemeManager::instance().loadTheme(themeName);
 
