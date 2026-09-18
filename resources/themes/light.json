@@ -1,0 +1,23 @@
+{
+    "name": "Light",
+    "colors": {
+        "editorBg":            "#ffffff",
+        "editorFg":            "#24292f",
+        "editorSelection":     "#b6d7ff",
+        "currentLineBg":       "#f6f8fa",
+        "currentLineNumberFg": "#24292f",
+        "lineNumberBg":        "#f6f8fa",
+        "lineNumberFg":        "#8c959f",
+        "lineNumberBorder":    "#d0d7de",
+
+        "latexCommand":        "#cf222e",
+        "latexComment":        "#6e7781",
+        "latexMath":           "#0550ae",
+        "latexBrace":          "#8250df"
+    },
+    "sizes": {
+        "fontPointSize":       12,
+        "lineNumberPadding":   12,
+        "tabWidthInSpaces":    4
+    }
+}
