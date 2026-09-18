@@ -1,0 +1,23 @@
+{
+    "name": "Crimson Void",
+    "colors": {
+        "editorBg":            "#000000",
+        "editorFg":            "#e8dcdc",
+        "editorSelection":     "#4a1018",
+        "currentLineBg":       "#1a0508",
+        "currentLineNumberFg": "#ff2e55",
+        "lineNumberBg":        "#0d0003",
+        "lineNumberFg":        "#7a3540",
+        "lineNumberBorder":    "#2a0a0f",
+
+        "latexCommand":        "#ff4466",
+        "latexComment":        "#7a4550",
+        "latexMath":           "#ff8080",
+        "latexBrace":          "#cc3344"
+    },
+    "sizes": {
+        "fontPointSize":       12,
+        "lineNumberPadding":   12,
+        "tabWidthInSpaces":    4
+    }
+}
