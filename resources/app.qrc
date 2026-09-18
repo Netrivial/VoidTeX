@@ -3,6 +3,6 @@
         <file>themes/dark.json</file>
         <file>themes/light.json</file>
         <file>themes/pure_void.json</file>
-        <file>themes/void_pulse.json</file>
+        <file>themes/crimson_void.json</file>
     </qresource>
 </RCC>
