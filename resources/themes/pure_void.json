@@ -1,0 +1,23 @@
+{
+    "name": "Pure Void",
+    "colors": {
+        "editorBg":            "#000000",
+        "editorFg":            "#e0e0e0",
+        "editorSelection":     "#333333",
+        "currentLineBg":       "#141414",
+        "currentLineNumberFg": "#ffffff",
+        "lineNumberBg":        "#0a0a0a",
+        "lineNumberFg":        "#666666",
+        "lineNumberBorder":    "#1a1a1a",
+
+        "latexCommand":        "#ffffff",
+        "latexComment":        "#555555",
+        "latexMath":           "#c0c0c0",
+        "latexBrace":          "#909090"
+    },
+    "sizes": {
+        "fontPointSize":       12,
+        "lineNumberPadding":   12,
+        "tabWidthInSpaces":    4
+    }
+}
