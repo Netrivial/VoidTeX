@@ -42,6 +42,7 @@ Editor::Editor(QWidget *parent)
     pal.setColor(QPalette::Base,  tm.color("editorBg"));
     pal.setColor(QPalette::Text,  tm.color("editorFg"));
     pal.setColor(QPalette::Highlight, tm.color("editorSelection"));
+    pal.setColor(QPalette::HighlightedText,  tm.color("editorSelectionFg"));
     setPalette(pal);
 
     QSettings s;

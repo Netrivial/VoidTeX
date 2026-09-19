@@ -4,6 +4,7 @@
         "editorBg":            "#ffffff",
         "editorFg":            "#24292f",
         "editorSelection":     "#b6d7ff",
+        "editorSelectionFg":   "#24292f",
         "currentLineBg":       "#f6f8fa",
         "currentLineNumberFg": "#24292f",
         "lineNumberBg":        "#f6f8fa",
