@@ -1,5 +1,6 @@
 #include "editor.h"
 #include "src/thememanager.h"
+#include "src/latexhighlighter.h"
 
 #include <QFontDatabase>
 #include <QPainter>
@@ -55,6 +56,8 @@ Editor::Editor(QWidget *parent)
             this, &Editor::updateLineNumberArea);
     connect(this, &Editor::cursorPositionChanged,
             this, &Editor::highlightCurrentLine);
+
+    m_highlighter = new LatexHighlighter(document());
 
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();

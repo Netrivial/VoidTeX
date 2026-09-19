@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
 
     QSettings s;
     // const QString themeName = s.value(SettingsKeys::ThemeName, "dark").toString();
-    const QString themeName = s.value(SettingsKeys::ThemeName, "light").toString();
-    QSettings().setValue(SettingsKeys::CurrentLineMode, "both");
+    const QString themeName = s.value(SettingsKeys::ThemeName, "pure_void").toString();
+    QSettings().setValue(SettingsKeys::CurrentLineMode, "lineNumberOnly"); // lineNumberOnly
     ThemeManager::instance().loadTheme(themeName);
 
     MainWindow w;

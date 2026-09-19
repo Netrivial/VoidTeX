@@ -17,8 +17,11 @@ qt_add_executable(VoidTeX
     editor.cpp
     editor.h
 
-    src/thememanager.h
+    src/latexhighlighter.cpp
+    src/latexhighlighter.h
+
     src/thememanager.cpp
+    src/thememanager.h
     src/settings.h
 
     resources/app.qrc

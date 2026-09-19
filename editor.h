@@ -7,6 +7,8 @@
 
 class Editor;
 
+class LatexHighlighter;
+
 class LineNumberArea : public QWidget
 {
 public:
@@ -40,7 +42,8 @@ private slots:
     void highlightCurrentLine();
 
 private:
-    LineNumberArea *m_lineNumberArea;
+    LineNumberArea    *m_lineNumberArea;
+    LatexHighlighter  *m_highlighter = nullptr;
     CurrentLineHighlight m_highlightMode = CurrentLineHighlight::Both;
 };
 
