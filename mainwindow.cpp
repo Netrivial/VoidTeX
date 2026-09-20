@@ -11,18 +11,54 @@
 #include <QPlainTextEdit>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QFile>
+#include <QFileInfo>
+#include <QFileDialog>
+#include <QDir>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
+
+// start LaTeX code
+namespace {
+const char *kNewFileTemplate = R"(\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\title{Новый документ}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% Начните печатать здесь
+
+\end{document}
+)";
+} // namespace
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowTitle(tr("VoidTeX — untitled"));
+    setWindowTitle(tr("VoidTeX"));
     resize(1200, 800);
+
+    QSettings s;
+    m_recentFiles = s.value("files/recent").toStringList();
 
     createCentralAndDocks();
     createActions();
     createMenus();
     createToolBar();
     createStatusBar();
+
+    updateRecentFilesMenu();
+    updateWindowTitle();
+
+    // Drag and drop
+    setAcceptDrops(true);
 }
 
 MainWindow::~MainWindow() = default;
@@ -31,6 +67,8 @@ void MainWindow::createCentralAndDocks()
 {
     m_editor = new Editor(this);
     setCentralWidget(m_editor);
+    connect(m_editor->document(), &QTextDocument::modificationChanged,
+            this, &MainWindow::onDocumentModifiedChanged);
 
     m_log = new QPlainTextEdit(this);
     m_log->setReadOnly(true);
@@ -63,6 +101,10 @@ void MainWindow::createActions()
     m_actionSaveAs = new QAction(tr("Save &As..."), this);
     m_actionSaveAs->setShortcut(QKeySequence::SaveAs);
     connect(m_actionSaveAs, &QAction::triggered, this, &MainWindow::onSaveAs);
+
+    m_actionClose = new QAction(tr("&Close"), this);
+    m_actionClose->setShortcut(QKeySequence::Close);  // Ctrl+W / Cmd+W
+    connect(m_actionClose, &QAction::triggered, this, &MainWindow::onClose);
 
     m_actionExit = new QAction(tr("E&xit"), this);
     m_actionExit->setShortcut(QKeySequence::Quit);
@@ -124,11 +166,60 @@ void MainWindow::createStatusBar()
     statusBar()->showMessage(tr("Ready"));
 }
 
-void MainWindow::onNew()      { m_log->appendPlainText(tr("[stub] New")); }
-void MainWindow::onOpen()     { m_log->appendPlainText(tr("[stub] Open")); }
-void MainWindow::onSave()     { m_log->appendPlainText(tr("[stub] Save")); }
-void MainWindow::onSaveAs()   { m_log->appendPlainText(tr("[stub] Save As")); }
-void MainWindow::onCompile()  { m_log->appendPlainText(tr("[stub] Compile")); }
+void MainWindow::onNew()
+{
+    if (!maybeSave()) return;
+
+    m_editor->setPlainText(QString::fromUtf8(kNewFileTemplate));
+    m_editor->document()->setModified(false);
+    m_currentFilePath.clear();
+    updateWindowTitle();
+}
+
+void MainWindow::onOpen()
+{
+    if (!maybeSave()) return;
+
+    const QString path = QFileDialog::getOpenFileName(this,
+                                                      tr("Открыть документ"),
+                                                      m_currentFilePath.isEmpty() ? QDir::homePath()
+                                                                                  : QFileInfo(m_currentFilePath).absolutePath(),
+                                                      tr("LaTeX документы (*.tex *.latex);;Все файлы (*)"));
+
+    if (!path.isEmpty())
+        loadFile(path);
+}
+
+void MainWindow::onSave()
+{
+    if (m_currentFilePath.isEmpty()) {
+        onSaveAs();
+        return;
+    }
+    saveToDisk(m_currentFilePath);
+}
+
+void MainWindow::onSaveAs()
+{
+    QString suggested = m_currentFilePath;
+    if (suggested.isEmpty())
+        suggested = QDir::homePath() + "/untitled.tex";
+
+    QString path = QFileDialog::getSaveFileName(this,
+                                                tr("Сохранить как"),
+                                                suggested,
+                                                tr("LaTeX документы (*.tex *.latex);;Все файлы (*)"));
+
+    if (path.isEmpty())
+        return;
+
+    if (QFileInfo(path).suffix().isEmpty())
+        path += ".tex";
+
+    saveToDisk(path);
+}
+
+void MainWindow::onCompile() { m_log->appendPlainText(tr("[stub] Compile")); }
 
 void MainWindow::onAbout()
 {
@@ -136,4 +227,175 @@ void MainWindow::onAbout()
                        tr("About VoidTeX"),
                        tr("<b>VoidTeX</b> — кроссплатформенный редактор LaTeX на Qt 6.<br>"
                           "Учебный проект."));
+}
+
+bool MainWindow::loadFile(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, tr("VoidTeX"),
+                             tr("Не удалось открыть файл:\n%1\n\n%2")
+                                 .arg(path, file.errorString()));
+        return false;
+    }
+
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+    m_editor->setPlainText(in.readAll());
+    m_editor->document()->setModified(false);
+
+    m_currentFilePath = path;
+    addToRecentFiles(path);
+    updateWindowTitle();
+    statusBar()->showMessage(tr("Открыт: %1").arg(path), 3000);
+    return true;
+}
+
+bool MainWindow::saveToDisk(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QMessageBox::warning(this, tr("VoidTeX"),
+                             tr("Не удалось сохранить файл:\n%1\n\n%2")
+                                 .arg(path, file.errorString()));
+        return false;
+    }
+
+    QTextStream out(&file);
+    out.setEncoding(QStringConverter::Utf8);
+    out << m_editor->toPlainText();
+
+    m_currentFilePath = path;
+    m_editor->document()->setModified(false);
+    addToRecentFiles(path);
+    updateWindowTitle();
+    statusBar()->showMessage(tr("Сохранено: %1").arg(path), 3000);
+    return true;
+}
+
+bool MainWindow::maybeSave()
+{
+    if (!m_editor->document()->isModified())
+        return true;
+
+    const auto ret = QMessageBox::warning(this, tr("VoidTeX"),
+                                          tr("Документ «%1» был изменён.\nСохранить изменения?")
+                                              .arg(m_currentFilePath.isEmpty()
+                                                       ? tr("Без имени")
+                                                       : QFileInfo(m_currentFilePath).fileName()),
+                                          QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    switch (ret) {
+    case QMessageBox::Save:    return onSave(), !m_editor->document()->isModified();
+    case QMessageBox::Discard: return true;
+    default:                   return false;
+    }
+}
+
+void MainWindow::onClose()
+{
+    if (maybeSave())
+        close();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (maybeSave())
+        event->accept();
+    else
+        event->ignore();
+}
+
+void MainWindow::onOpenRecent()
+{
+    auto *action = qobject_cast<QAction*>(sender());
+    if (!action) return;
+
+    const QString path = action->data().toString();
+    if (!QFileInfo::exists(path)) {
+        QMessageBox::warning(this, tr("VoidTeX"),
+                             tr("Файл больше не существует:\n%1").arg(path));
+        m_recentFiles.removeAll(path);
+        QSettings().setValue("files/recent", m_recentFiles);
+        updateRecentFilesMenu();
+        return;
+    }
+
+    if (!maybeSave()) return;
+    loadFile(path);
+}
+
+void MainWindow::onDocumentModifiedChanged(bool modified)
+{
+    Q_UNUSED(modified);
+    updateWindowTitle();
+}
+
+void MainWindow::addToRecentFiles(const QString &path)
+{
+    m_recentFiles.removeAll(path);
+    m_recentFiles.prepend(path);
+    while (m_recentFiles.size() > MaxRecentFiles)
+        m_recentFiles.removeLast();
+
+    QSettings().setValue("files/recent", m_recentFiles);
+    updateRecentFilesMenu();
+}
+
+void MainWindow::updateRecentFilesMenu()
+{
+    if (!m_recentFilesMenu) return;
+
+    m_recentFilesMenu->clear();
+
+    if (m_recentFiles.isEmpty()) {
+        QAction *empty = m_recentFilesMenu->addAction(tr("(нет)"));
+        empty->setEnabled(false);
+        return;
+    }
+
+    for (const QString &path : std::as_const(m_recentFiles)) {
+        const QString label = QFileInfo(path).fileName();
+        QAction *action = m_recentFilesMenu->addAction(label);
+        action->setData(path);
+        action->setStatusTip(path);
+        action->setToolTip(path);
+        connect(action, &QAction::triggered, this, &MainWindow::onOpenRecent);
+    }
+
+    m_recentFilesMenu->addSeparator();
+    QAction *clear = m_recentFilesMenu->addAction(tr("Очистить список"));
+    connect(clear, &QAction::triggered, this, [this]() {
+        m_recentFiles.clear();
+        QSettings().setValue("files/recent", m_recentFiles);
+        updateRecentFilesMenu();
+    });
+}
+
+void MainWindow::updateWindowTitle()
+{
+    QString name = m_currentFilePath.isEmpty()
+    ? tr("Без имени")
+    : QFileInfo(m_currentFilePath).fileName();
+
+    const QString modified = m_editor->document()->isModified() ? "*" : "";
+    setWindowTitle(tr("%1%2 — VoidTeX").arg(modified, name));
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    const auto urls = event->mimeData()->urls();
+    if (urls.isEmpty()) return;
+
+    const QString path = urls.first().toLocalFile();
+    if (path.isEmpty()) return;
+
+    if (!maybeSave()) return;
+    loadFile(path);
 }
