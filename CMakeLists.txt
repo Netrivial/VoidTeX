@@ -27,6 +27,8 @@ qt_add_executable(VoidTeX
     resources/app.qrc
 )
 
+target_include_directories(VoidTeX PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 target_link_libraries(VoidTeX
     PRIVATE
         Qt::Core

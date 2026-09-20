@@ -15,6 +15,9 @@
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QDir>
+#include <QCloseEvent>
+#include <QSettings>
+#include <QTextStream>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
@@ -103,7 +106,7 @@ void MainWindow::createActions()
     connect(m_actionSaveAs, &QAction::triggered, this, &MainWindow::onSaveAs);
 
     m_actionClose = new QAction(tr("&Close"), this);
-    m_actionClose->setShortcut(QKeySequence::Close);  // Ctrl+W / Cmd+W
+    m_actionClose->setShortcut(QKeySequence::Close);
     connect(m_actionClose, &QAction::triggered, this, &MainWindow::onClose);
 
     m_actionExit = new QAction(tr("E&xit"), this);
@@ -129,10 +132,12 @@ void MainWindow::createMenus()
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(m_actionNew);
     fileMenu->addAction(m_actionOpen);
+    m_recentFilesMenu = fileMenu->addMenu(tr("Open &Recent"));
     fileMenu->addSeparator();
     fileMenu->addAction(m_actionSave);
     fileMenu->addAction(m_actionSaveAs);
     fileMenu->addSeparator();
+    fileMenu->addAction(m_actionClose);
     fileMenu->addAction(m_actionExit);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
