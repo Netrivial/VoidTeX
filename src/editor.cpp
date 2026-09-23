@@ -1,6 +1,6 @@
 #include "editor.h"
-#include "src/thememanager.h"
-#include "src/latexhighlighter.h"
+#include "thememanager.h"
+#include "latexhighlighter.h"
 
 #include <QFontDatabase>
 #include <QPainter>

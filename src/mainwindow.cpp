@@ -106,7 +106,7 @@ void MainWindow::createActions()
     connect(m_actionSaveAs, &QAction::triggered, this, &MainWindow::onSaveAs);
 
     m_actionClose = new QAction(tr("&Close"), this);
-    m_actionClose->setShortcut(QKeySequence::Close);
+    m_actionClose->setShortcuts({QKeySequence::Close, QKeySequence("Ctrl+W")});
     connect(m_actionClose, &QAction::triggered, this, &MainWindow::onClose);
 
     m_actionExit = new QAction(tr("E&xit"), this);

@@ -11,23 +11,24 @@ set(CMAKE_AUTOUIC ON)
 
 qt_add_executable(VoidTeX
     WIN32 MACOSX_BUNDLE
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    editor.cpp
-    editor.h
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mainwindow.h
 
+    src/editor.cpp
+    src/editor.h
     src/latexhighlighter.cpp
     src/latexhighlighter.h
 
     src/thememanager.cpp
     src/thememanager.h
     src/settings.h
-
     resources/app.qrc
 )
 
-target_include_directories(VoidTeX PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(VoidTeX PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 target_link_libraries(VoidTeX
     PRIVATE

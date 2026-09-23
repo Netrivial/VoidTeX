@@ -60,7 +60,7 @@ void LatexHighlighter::rebuildRules()
 void LatexHighlighter::highlightBlock(const QString &text)
 {
     // --- 1. Применяем однострочные правила ---
-    for (const Rule &rule : qAsConst(m_rules)) {
+    for (const Rule &rule : std::as_const(m_rules)) {
         auto it = rule.pattern.globalMatch(text);
         while (it.hasNext()) {
             const auto match = it.next();
