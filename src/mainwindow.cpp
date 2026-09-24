@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "editor.h"
+#include "compiler.h"
 
 #include <QAction>
 #include <QApplication>
@@ -50,6 +51,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     QSettings s;
     m_recentFiles = s.value("files/recent").toStringList();
+
+    m_compiler = new Compiler(this);
+
+    connect(m_compiler, &Compiler::started,       this, &MainWindow::onCompilerStarted);
+    connect(m_compiler, &Compiler::outputLine,    this, &MainWindow::onCompilerOutput);
+    connect(m_compiler, &Compiler::finished,      this, &MainWindow::onCompilerFinished);
+
 
     createCentralAndDocks();
     createActions();
@@ -224,7 +232,59 @@ void MainWindow::onSaveAs()
     saveToDisk(path);
 }
 
-void MainWindow::onCompile() { m_log->appendPlainText(tr("[stub] Compile")); }
+void MainWindow::onCompile()
+{
+    if (m_currentFilePath.isEmpty()) {
+        statusBar()->showMessage(tr("Сначала сохраните файл."), 3000);
+        onSaveAs();
+        if (m_currentFilePath.isEmpty())
+            return;
+    }
+
+    if (m_editor->document()->isModified()) {
+        if (!saveToDisk(m_currentFilePath))
+            return;
+    }
+
+    if (m_compiler->isRunning()) {
+        statusBar()->showMessage(tr("Компиляция уже выполняется."), 3000);
+        return;
+    }
+
+    m_log->clear();
+    m_log->appendPlainText(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
+
+    const auto job = m_compiler->makeDefaultJob(m_currentFilePath);
+    m_compiler->run(job);
+}
+
+void MainWindow::onCompilerStarted(const QString &program, const QStringList &arguments)
+{
+    Q_UNUSED(program);
+    Q_UNUSED(arguments);
+    m_actionCompile->setEnabled(false);
+    statusBar()->showMessage(tr("Компиляция..."));
+}
+
+void MainWindow::onCompilerOutput(const QString &line)
+{
+    m_log->appendPlainText(line);
+}
+
+void MainWindow::onCompilerFinished(const Compiler::Result &result)
+{
+    m_actionCompile->setEnabled(true);
+
+    if (result.success) {
+        statusBar()->showMessage(tr("Сборка успешна: %1").arg(result.pdfPath), 5000);
+        m_log->appendPlainText(tr("=== Успех ==="));
+    } else {
+        statusBar()->showMessage(tr("Сборка завершилась с ошибкой (код %1)").arg(result.exitCode), 5000);
+        m_log->appendPlainText(tr("=== Ошибка ==="));
+        if (!result.errorMessage.isEmpty())
+            m_log->appendPlainText(result.errorMessage);
+    }
+}
 
 void MainWindow::onAbout()
 {

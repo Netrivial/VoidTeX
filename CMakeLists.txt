@@ -1,13 +1,11 @@
 cmake_minimum_required(VERSION 3.19)
 project(VoidTeX LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
-
-qt_standard_project_setup()
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
 qt_add_executable(VoidTeX
     WIN32 MACOSX_BUNDLE
@@ -24,6 +22,8 @@ qt_add_executable(VoidTeX
     src/thememanager.h
     src/settings.h
     resources/app.qrc
+    src/compiler.h
+    src/compiler.cpp
 )
 
 target_include_directories(VoidTeX PRIVATE

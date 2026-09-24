@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "compiler.h"
+
 #include <QMainWindow>
 #include <QStringList>
 
@@ -9,6 +11,7 @@ class QDockWidget;
 class QMenu;
 class QPlainTextEdit;
 class Editor;
+class Compiler;
 
 class MainWindow : public QMainWindow
 {
@@ -33,6 +36,9 @@ private slots:
     void onCompile();
     void onAbout();
     void onDocumentModifiedChanged(bool modified);
+    void onCompilerStarted(const QString &program, const QStringList &arguments);
+    void onCompilerOutput(const QString &line);
+    void onCompilerFinished(const Compiler::Result &result);
 
 private:
     void createActions();
@@ -63,6 +69,7 @@ private:
     Editor         *m_editor = nullptr;
     QPlainTextEdit *m_log    = nullptr;
     QDockWidget    *m_logDock = nullptr;
+    Compiler *m_compiler = nullptr;
 
     // Меню
     QMenu *m_recentFilesMenu = nullptr;
