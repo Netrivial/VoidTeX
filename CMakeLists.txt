@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Pdf PdfWidgets)
 
 qt_add_executable(VoidTeX
     WIN32 MACOSX_BUNDLE
@@ -22,8 +22,12 @@ qt_add_executable(VoidTeX
     src/thememanager.h
     src/settings.h
     resources/app.qrc
+
     src/compiler.h
     src/compiler.cpp
+
+    src/pdfpreview.h
+    src/pdfpreview.cpp
 )
 
 target_include_directories(VoidTeX PRIVATE
@@ -34,6 +38,8 @@ target_link_libraries(VoidTeX
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Qt6::Pdf
+        Qt6::PdfWidgets
 )
 
 install(TARGETS VoidTeX

@@ -12,6 +12,7 @@ class QMenu;
 class QPlainTextEdit;
 class Editor;
 class Compiler;
+class PdfPreview;
 
 class MainWindow : public QMainWindow
 {
@@ -54,6 +55,9 @@ private:
     void updateRecentFilesMenu();
     void updateWindowTitle();
 
+    void showPdfPreview(const QString &pdfPath);
+    void clearPdfPreview();
+
     // Actions
     QAction *m_actionNew     = nullptr;
     QAction *m_actionOpen    = nullptr;
@@ -64,12 +68,15 @@ private:
     QAction *m_actionCompile = nullptr;
     QAction *m_actionAbout   = nullptr;
     QAction *m_actionAboutQt = nullptr;
+    QAction *m_actionOpenPdf = nullptr;
 
     // Widgets
     Editor         *m_editor = nullptr;
     QPlainTextEdit *m_log    = nullptr;
-    QDockWidget    *m_logDock = nullptr;
-    Compiler *m_compiler = nullptr;
+    QDockWidget   *m_logDock = nullptr;
+    Compiler *m_compiler     = nullptr;
+    PdfPreview *m_pdfPreview = nullptr;
+    QDockWidget *m_pdfDock   = nullptr;
 
     // Меню
     QMenu *m_recentFilesMenu = nullptr;

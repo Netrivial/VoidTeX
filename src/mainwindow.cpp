@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "editor.h"
 #include "compiler.h"
+#include "pdfpreview.h"
 
 #include <QAction>
 #include <QApplication>
@@ -22,6 +23,8 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QDesktopServices>
+#include <QUrl>
 
 // start LaTeX code
 namespace {
@@ -90,6 +93,14 @@ void MainWindow::createCentralAndDocks()
     m_logDock->setWidget(m_log);
     m_logDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
     addDockWidget(Qt::BottomDockWidgetArea, m_logDock);
+
+    m_pdfPreview = new PdfPreview(this);
+
+    m_pdfDock = new QDockWidget(tr("PDF Preview"), this);
+    m_pdfDock->setObjectName("PdfDock");
+    m_pdfDock->setWidget(m_pdfPreview);
+    m_pdfDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, m_pdfDock);
 }
 
 void MainWindow::createActions()
@@ -127,6 +138,18 @@ void MainWindow::createActions()
     m_actionCompile->setStatusTip(tr("Скомпилировать документ"));
     connect(m_actionCompile, &QAction::triggered, this, &MainWindow::onCompile);
 
+    m_actionOpenPdf = new QAction(tr("Open PDF &Externally"), this);
+    connect(m_actionOpenPdf, &QAction::triggered, this, [this]() {
+        if (m_currentFilePath.isEmpty()) return;
+        const QFileInfo fi(m_currentFilePath);
+        const QString pdf = fi.absolutePath() + "/build/" + fi.completeBaseName() + ".pdf";
+        if (!QFileInfo::exists(pdf)) {
+            statusBar()->showMessage(tr("PDF ещё не собран."), 3000);
+            return;
+        }
+        QDesktopServices::openUrl(QUrl::fromLocalFile(pdf));
+    });
+
     // --- Help ---
     m_actionAbout = new QAction(tr("&About VoidTeX"), this);
     connect(m_actionAbout, &QAction::triggered, this, &MainWindow::onAbout);
@@ -152,9 +175,11 @@ void MainWindow::createMenus()
 
     QMenu *buildMenu = menuBar()->addMenu(tr("&Build"));
     buildMenu->addAction(m_actionCompile);
+    buildMenu->addAction(m_actionOpenPdf);
 
     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(m_logDock->toggleViewAction());
+    viewMenu->addAction(m_pdfDock->toggleViewAction());
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(m_actionAbout);
@@ -186,6 +211,7 @@ void MainWindow::onNew()
     m_editor->setPlainText(QString::fromUtf8(kNewFileTemplate));
     m_editor->document()->setModified(false);
     m_currentFilePath.clear();
+    showPdfPreview("");
     updateWindowTitle();
 }
 
@@ -200,7 +226,7 @@ void MainWindow::onOpen()
                                                       tr("LaTeX документы (*.tex *.latex);;Все файлы (*)"));
 
     if (!path.isEmpty())
-        loadFile(path);
+        (path);
 }
 
 void MainWindow::onSave()
@@ -278,11 +304,38 @@ void MainWindow::onCompilerFinished(const Compiler::Result &result)
     if (result.success) {
         statusBar()->showMessage(tr("Сборка успешна: %1").arg(result.pdfPath), 5000);
         m_log->appendPlainText(tr("=== Успех ==="));
+
+        showPdfPreview(result.pdfPath);
+
+        if (!m_pdfDock->isVisible())
+            m_pdfDock->show();
     } else {
         statusBar()->showMessage(tr("Сборка завершилась с ошибкой (код %1)").arg(result.exitCode), 5000);
         m_log->appendPlainText(tr("=== Ошибка ==="));
         if (!result.errorMessage.isEmpty())
             m_log->appendPlainText(result.errorMessage);
+    }
+}
+
+void MainWindow::showPdfPreview(const QString &pdfPath)
+{
+    if (m_pdfPreview) {
+        m_pdfDock->setWidget(nullptr);
+        m_pdfPreview->deleteLater();
+        m_pdfPreview = nullptr;
+    }
+
+    m_pdfPreview = new PdfPreview(this);
+    m_pdfDock->setWidget(m_pdfPreview);
+    m_pdfPreview->loadPdf(pdfPath);
+}
+
+void MainWindow::clearPdfPreview()
+{
+    if (m_pdfPreview) {
+        m_pdfDock->setWidget(nullptr);
+        m_pdfPreview->deleteLater();
+        m_pdfPreview = nullptr;
     }
 }
 
@@ -307,6 +360,7 @@ bool MainWindow::loadFile(const QString &path)
     QTextStream in(&file);
     in.setEncoding(QStringConverter::Utf8);
     m_editor->setPlainText(in.readAll());
+    showPdfPreview("");
     m_editor->document()->setModified(false);
 
     m_currentFilePath = path;
