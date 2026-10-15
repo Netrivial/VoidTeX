@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "settingsmanager.h"
 #include "editor.h"
 #include "compiler.h"
 #include "pdfpreview.h"
@@ -52,8 +53,8 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(tr("VoidTeX"));
     resize(1200, 800);
 
-    QSettings s;
-    m_recentFiles = s.value("files/recent").toStringList();
+    m_recentFiles = SettingsManager::instance()
+                        .value(SettingsKeys::RecentFiles).toStringList();
 
     m_compiler = new Compiler(this);
 
@@ -226,7 +227,7 @@ void MainWindow::onOpen()
                                                       tr("LaTeX документы (*.tex *.latex);;Все файлы (*)"));
 
     if (!path.isEmpty())
-        (path);
+        loadFile(path);
 }
 
 void MainWindow::onSave()
@@ -435,7 +436,7 @@ void MainWindow::onOpenRecent()
         QMessageBox::warning(this, tr("VoidTeX"),
                              tr("Файл больше не существует:\n%1").arg(path));
         m_recentFiles.removeAll(path);
-        QSettings().setValue("files/recent", m_recentFiles);
+    SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
         updateRecentFilesMenu();
         return;
     }
@@ -457,7 +458,7 @@ void MainWindow::addToRecentFiles(const QString &path)
     while (m_recentFiles.size() > MaxRecentFiles)
         m_recentFiles.removeLast();
 
-    QSettings().setValue("files/recent", m_recentFiles);
+    SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
     updateRecentFilesMenu();
 }
 
@@ -486,7 +487,7 @@ void MainWindow::updateRecentFilesMenu()
     QAction *clear = m_recentFilesMenu->addAction(tr("Очистить список"));
     connect(clear, &QAction::triggered, this, [this]() {
         m_recentFiles.clear();
-        QSettings().setValue("files/recent", m_recentFiles);
+        SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
         updateRecentFilesMenu();
     });
 }

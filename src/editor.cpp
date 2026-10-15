@@ -46,9 +46,16 @@ Editor::Editor(QWidget *parent)
     pal.setColor(QPalette::HighlightedText,  tm.color("editorSelectionFg"));
     setPalette(pal);
 
-    QSettings s;
     m_highlightMode = currentLineHighlightFromString(
-        s.value(SettingsKeys::CurrentLineMode, "both").toString());
+        SettingsManager::instance().stringValue(SettingsKeys::CurrentLineMode, "both"));
+    connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
+            this, [this](const QString &key, const QVariant &value) {
+                if (key == SettingsKeys::CurrentLineMode) {
+                    m_highlightMode = currentLineHighlightFromString(value.toString());
+                    highlightCurrentLine();
+                    m_lineNumberArea->update();
+                }
+            });
 
     connect(this, &Editor::blockCountChanged,
             this, &Editor::updateLineNumberAreaWidth);

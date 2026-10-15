@@ -1,7 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include "settings.h"
+#include "settingsmanager.h"
 
 #include <QPlainTextEdit>
 

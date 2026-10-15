@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "settings.h"
+#include "settingsmanager.h"
 #include "thememanager.h"
 
 #include <QApplication>
@@ -12,13 +12,16 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("VoidTeX");
     QCoreApplication::setApplicationName("VoidTeX");
 
-    QSettings s;
-    // const QString themeName = s.value(SettingsKeys::ThemeName, "dark").toString();
-    const QString themeName = s.value(SettingsKeys::ThemeName, "pure_void").toString();
-    QSettings().setValue(SettingsKeys::CurrentLineMode, "lineNumberOnly"); // lineNumberOnly
+    const QString themeName =
+        SettingsManager::instance().stringValue(SettingsKeys::ThemeName, "dark");
+    SettingsManager::instance().setValue(SettingsKeys::CurrentLineMode, "both");
     ThemeManager::instance().loadTheme(themeName);
+
+    SettingsManager::instance().setValue(SettingsKeys::ThemeName, themeName);
+
 
     MainWindow w;
     w.show();
+    SettingsManager::instance().sync();
     return QApplication::exec();
 }
