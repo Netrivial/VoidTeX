@@ -88,6 +88,7 @@ void MainWindow::createCentralAndDocks()
     m_log = new QPlainTextEdit(this);
     m_log->setReadOnly(true);
     m_log->setPlaceholderText(tr("Здесь будут сообщения компилятора..."));
+    m_log->setObjectName("LogPanel");
 
     m_logDock = new QDockWidget(tr("Logs"), this);
     m_logDock->setObjectName("LogsDock");

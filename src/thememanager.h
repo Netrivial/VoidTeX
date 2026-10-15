@@ -24,6 +24,8 @@ signals:
     void themeChanged();
 
 private:
+    void applyQss();
+
     ThemeManager() = default;
     ThemeManager(const ThemeManager &) = delete;
     ThemeManager &operator=(const ThemeManager &) = delete;
