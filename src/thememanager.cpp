@@ -135,10 +135,19 @@ QDockWidget::float-button:hover {
 /* ==== PDF View ==== */
 QPdfView {
     border: none;
-    background-color: %3; /* Фон как у панели, чтобы не было серых полос */
+    background-color: %3;
 }
 
 /* ==== Меню ==== */
+QMenu {
+    background-color: %3;
+    color: %2;
+    border: 1px solid %4;
+    min-width: 180px;
+}
+QMenu::item {
+    padding: 6px 32px;
+}
 QMenuBar {
     background-color: %3;
     color: %2;

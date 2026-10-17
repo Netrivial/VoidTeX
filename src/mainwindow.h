@@ -9,6 +9,7 @@
 class QAction;
 class QDockWidget;
 class QMenu;
+class QToolBar;
 class SettingsDialog;
 class QPlainTextEdit;
 class Editor;
@@ -80,6 +81,8 @@ private:
     Compiler *m_compiler     = nullptr;
     PdfPreview *m_pdfPreview = nullptr;
     QDockWidget *m_pdfDock   = nullptr;
+
+    QToolBar *m_mainToolBar  = nullptr;
 
     // Меню
     QMenu *m_recentFilesMenu = nullptr;

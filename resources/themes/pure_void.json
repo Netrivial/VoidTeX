@@ -11,7 +11,7 @@
         "lineNumberFg":        "#666666",
         "lineNumberBorder":    "#1a1a1a",
 
-        "latexCommand":        "#ffffff",
+        "latexCommand":        "#a0a0a0",
         "latexComment":        "#555555",
         "latexMath":           "#c0c0c0",
         "latexBrace":          "#909090"

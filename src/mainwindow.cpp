@@ -68,8 +68,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     createCentralAndDocks();
     createActions();
-    createMenus();
     createToolBar();
+    createMenus();
     createStatusBar();
 
     connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
@@ -126,7 +126,7 @@ void MainWindow::createCentralAndDocks()
     addDockWidget(Qt::RightDockWidgetArea, m_pdfDock);
 }
 
-void MainWindow::   createActions()
+void MainWindow::createActions()
 {
     // --- File ---
     m_actionNew = new QAction(tr("&New"), this);
@@ -208,6 +208,7 @@ void MainWindow::createMenus()
     buildMenu->addAction(m_actionOpenPdf);
 
     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+    viewMenu->addAction(m_mainToolBar->toggleViewAction());
     viewMenu->addAction(m_logDock->toggleViewAction());
     viewMenu->addAction(m_pdfDock->toggleViewAction());
 
@@ -218,15 +219,15 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolBar()
 {
-    QToolBar *tb = addToolBar(tr("Main"));
-    tb->setObjectName("MainToolBar");
-    tb->setMovable(false);
+    m_mainToolBar = addToolBar(tr("Main"));
+    m_mainToolBar->setObjectName("MainToolBar");
+    m_mainToolBar->setMovable(false);
 
-    tb->addAction(m_actionNew);
-    tb->addAction(m_actionOpen);
-    tb->addAction(m_actionSave);
-    tb->addSeparator();
-    tb->addAction(m_actionCompile);
+    m_mainToolBar->addAction(m_actionNew);
+    m_mainToolBar->addAction(m_actionOpen);
+    m_mainToolBar->addAction(m_actionSave);
+    m_mainToolBar->addSeparator();
+    m_mainToolBar->addAction(m_actionCompile);
 }
 
 void MainWindow::createStatusBar()
