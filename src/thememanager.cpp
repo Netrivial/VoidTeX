@@ -103,14 +103,25 @@ QMainWindow, QDialog {
 QDockWidget {
     background-color: %3;
     color: %2;
-    titlebar-close-icon: none;
-    titlebar-normal-icon: none;
 }
 QDockWidget::title {
     background-color: %3;
     color: %2;
     padding: 6px;
     border-bottom: 1px solid %4;
+}
+QDockWidget::close-button,
+QDockWidget::float-button {
+    background: transparent;
+    border: none;
+    icon-size: 25px;
+    padding: 2px;
+    margin: 2px;
+}
+QDockWidget::close-button:hover,
+QDockWidget::float-button:hover {
+    background: %5;
+    border-radius: 3px;
 }
 
 /* ==== Панель логов (QPlainTextEdit с objectName) ==== */
@@ -155,6 +166,11 @@ QToolBar {
     border: none;
     spacing: 4px;
     padding: 2px;
+}
+QToolBar::separator {
+    background: %4;
+    width: 1px;
+    margin: 4px 6px;
 }
 QToolButton {
     background: transparent;
@@ -230,7 +246,7 @@ QAbstractScrollArea::corner {
     border: none;
 }
 
-/* ==== Вкладки (для будущего SettingsDialog) ==== */
+/* ==== Вкладки ==== */
 QTabWidget::pane {
     border: 1px solid %4;
 }
@@ -243,6 +259,73 @@ QTabBar::tab:selected {
     background: %1;
     color: %2;
     border-bottom: 2px solid %6;
+}
+/* ==== Диалоги — содержимое ==== */
+QDialog QLabel {
+    color: %2;
+}
+QDialog QCheckBox {
+    color: %2;
+}
+QDialog QComboBox,
+QDialog QSpinBox,
+QDialog QDoubleSpinBox,
+QDialog QLineEdit,
+QDialog QPlainTextEdit {
+    background-color: %1;
+    color: %2;
+    border: 1px solid %4;
+    padding: 4px;
+    border-radius: 4px;
+    selection-background-color: %6;
+}
+QDialog QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+QDialog QComboBox QAbstractItemView {
+    background-color: %3;
+    color: %2;
+    selection-background-color: %5;
+}
+QDialog QPushButton {
+    background-color: %3;
+    color: %2;
+    border: 1px solid %4;
+    padding: 6px 14px;
+    border-radius: 4px;
+    min-width: 70px;
+}
+QDialog QPushButton:hover {
+    background-color: %5;
+}
+QDialog QPushButton:pressed {
+    background-color: %6;
+}
+QDialog QPushButton:default {
+    border: 1px solid %6;
+}
+QCheckBox {
+    color: %2;
+    spacing: 8px;
+}
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid %4;
+    background: %1;
+    border-radius: 3px;
+}
+QCheckBox::indicator:hover {
+    border: 1px solid %5;
+}
+QCheckBox::indicator:checked {
+    background: %6;
+    border: 1px solid %6;
+}
+QCheckBox::indicator:disabled {
+    background: %3;
+    border: 1px solid %4;
 }
 )").arg(bg, fg, panelBg, border, hover, accent);
 

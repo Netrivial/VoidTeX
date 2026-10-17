@@ -40,6 +40,7 @@ private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void updateLineNumberArea(const QRect &rect, int dy);
     void highlightCurrentLine();
+    void applyTheme();
 
 private:
     LineNumberArea    *m_lineNumberArea;

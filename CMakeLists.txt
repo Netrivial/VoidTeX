@@ -30,6 +30,7 @@ qt_add_executable(VoidTeX
 
     src/pdfpreview.h
     src/pdfpreview.cpp
+    src/settingsdialog.h src/settingsdialog.cpp
 )
 
 target_include_directories(VoidTeX PRIVATE

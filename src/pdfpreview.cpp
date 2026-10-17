@@ -23,6 +23,8 @@ PdfPreview::PdfPreview(QWidget *parent)
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_view);
+
+    // setFrameShape(QFrame::NoFrame);
 }
 
 void PdfPreview::loadPdf(const QString &path)

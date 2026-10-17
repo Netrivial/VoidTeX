@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "settingsmanager.h"
+#include "settingsdialog.h"
+#include "thememanager.h"
 #include "editor.h"
 #include "compiler.h"
 #include "pdfpreview.h"
@@ -26,6 +28,7 @@
 #include <QMimeData>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QTimer>
 
 // start LaTeX code
 namespace {
@@ -69,11 +72,29 @@ MainWindow::MainWindow(QWidget *parent)
     createToolBar();
     createStatusBar();
 
+    connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
+            this, [](const QString &key, const QVariant &value) {
+                if (key == SettingsKeys::ThemeName) {
+                    ThemeManager::instance().loadTheme(value.toString());
+                }
+            });
+
     updateRecentFilesMenu();
     updateWindowTitle();
 
     // Drag and drop
     setAcceptDrops(true);
+
+    const bool showPdf = SettingsManager::instance()
+                             .boolValue(SettingsKeys::ShowPdfOnStartup, false);
+    m_pdfDock->setVisible(showPdf);
+
+    connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
+            this, [this](const QString &key, const QVariant &value) {
+                if (key == SettingsKeys::ShowPdfOnStartup) {
+                    m_pdfDock->setVisible(value.toBool());
+                }
+            });
 }
 
 MainWindow::~MainWindow() = default;
@@ -105,7 +126,7 @@ void MainWindow::createCentralAndDocks()
     addDockWidget(Qt::RightDockWidgetArea, m_pdfDock);
 }
 
-void MainWindow::createActions()
+void MainWindow::   createActions()
 {
     // --- File ---
     m_actionNew = new QAction(tr("&New"), this);
@@ -133,6 +154,12 @@ void MainWindow::createActions()
     m_actionExit = new QAction(tr("E&xit"), this);
     m_actionExit->setShortcut(QKeySequence::Quit);
     connect(m_actionExit, &QAction::triggered, this, &QWidget::close);
+
+    // --- Settings (edit) ---
+    m_actionSettings = new QAction(tr("&Settings..."), this);
+    m_actionSettings->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    m_actionSettings->setStatusTip(tr("Открыть настройки приложения"));
+    connect(m_actionSettings, &QAction::triggered, this, &MainWindow::onSettings);
 
     // --- Build ---
     m_actionCompile = new QAction(tr("&Compile"), this);
@@ -174,6 +201,7 @@ void MainWindow::createMenus()
     fileMenu->addAction(m_actionExit);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(m_actionSettings);
 
     QMenu *buildMenu = menuBar()->addMenu(tr("&Build"));
     buildMenu->addAction(m_actionCompile);
@@ -258,6 +286,12 @@ void MainWindow::onSaveAs()
         path += ".tex";
 
     saveToDisk(path);
+}
+
+void MainWindow::onSettings()
+{
+    SettingsDialog dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::onCompile()
@@ -391,6 +425,9 @@ bool MainWindow::saveToDisk(const QString &path)
     addToRecentFiles(path);
     updateWindowTitle();
     statusBar()->showMessage(tr("Сохранено: %1").arg(path), 3000);
+    if (SettingsManager::instance().boolValue(SettingsKeys::AutoCompileOnSave, false)) {
+        QTimer::singleShot(50, this, &MainWindow::onCompile);
+    }
     return true;
 }
 

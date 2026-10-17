@@ -32,19 +32,12 @@ Editor::Editor(QWidget *parent)
 {
     auto &tm = ThemeManager::instance();
 
-    QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    f.setPointSize(tm.size("fontPointSize"));
-    setFont(f);
+    connect(&ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &Editor::applyTheme);
 
-    setTabStopDistance(tm.size("tabWidthInSpaces")
-                       * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
+    setFrameShape(QFrame::NoFrame);
 
-    QPalette pal = palette();
-    pal.setColor(QPalette::Base,  tm.color("editorBg"));
-    pal.setColor(QPalette::Text,  tm.color("editorFg"));
-    pal.setColor(QPalette::Highlight, tm.color("editorSelection"));
-    pal.setColor(QPalette::HighlightedText,  tm.color("editorSelectionFg"));
-    setPalette(pal);
+    applyTheme();
 
     m_highlightMode = currentLineHighlightFromString(
         SettingsManager::instance().stringValue(SettingsKeys::CurrentLineMode, "both"));
@@ -174,4 +167,26 @@ void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
         bottom = top + qRound(blockBoundingRect(block).height());
         ++blockNumber;
     }
+}
+
+void Editor::applyTheme()
+{
+    auto &tm = ThemeManager::instance();
+
+    QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    f.setPointSize(tm.size("fontPointSize"));
+    setFont(f);
+
+    setTabStopDistance(tm.size("tabWidthInSpaces")
+                       * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
+
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base,            tm.color("editorBg"));
+    pal.setColor(QPalette::Text,            tm.color("editorFg"));
+    pal.setColor(QPalette::Highlight,       tm.color("editorSelection"));
+    pal.setColor(QPalette::HighlightedText, tm.color("editorSelectionFg"));
+    setPalette(pal);
+
+    highlightCurrentLine();
+    m_lineNumberArea->update();
 }

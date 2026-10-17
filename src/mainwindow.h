@@ -9,6 +9,7 @@
 class QAction;
 class QDockWidget;
 class QMenu;
+class SettingsDialog;
 class QPlainTextEdit;
 class Editor;
 class Compiler;
@@ -40,6 +41,7 @@ private slots:
     void onCompilerStarted(const QString &program, const QStringList &arguments);
     void onCompilerOutput(const QString &line);
     void onCompilerFinished(const Compiler::Result &result);
+    void onSettings();
 
 private:
     void createActions();
@@ -69,6 +71,7 @@ private:
     QAction *m_actionAbout   = nullptr;
     QAction *m_actionAboutQt = nullptr;
     QAction *m_actionOpenPdf = nullptr;
+    QAction *m_actionSettings = nullptr;
 
     // Widgets
     Editor         *m_editor = nullptr;

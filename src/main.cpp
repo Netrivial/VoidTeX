@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
 
     const QString themeName =
         SettingsManager::instance().stringValue(SettingsKeys::ThemeName, "dark");
-    SettingsManager::instance().setValue(SettingsKeys::CurrentLineMode, "both");
     ThemeManager::instance().loadTheme(themeName);
 
     SettingsManager::instance().setValue(SettingsKeys::ThemeName, themeName);
