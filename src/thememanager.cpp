@@ -107,8 +107,9 @@ QDockWidget {
 QDockWidget::title {
     background-color: %3;
     color: %2;
-    padding: 6px;
+    padding: 8px 12px;
     border-bottom: 1px solid %4;
+    font-weight: bold;
 }
 QDockWidget::close-button,
 QDockWidget::float-button {
@@ -129,6 +130,12 @@ QDockWidget::float-button:hover {
     background-color: %1;
     color: %2;
     border: none;
+}
+
+/* ==== PDF View ==== */
+QPdfView {
+    border: none;
+    background-color: %3; /* Фон как у панели, чтобы не было серых полос */
 }
 
 /* ==== Меню ==== */
@@ -158,6 +165,15 @@ QMenu::separator {
     height: 1px;
     background: %4;
     margin: 4px 8px;
+}
+
+/* ==== Редактор ==== */
+#Editor {
+    background-color: %1;
+    color: %2;
+    border: none;
+    selection-background-color: %6;
+    selection-color: %2;
 }
 
 /* ==== Тулбар и статусбар ==== */
@@ -192,51 +208,47 @@ QStatusBar {
 /* ==== Тонкие скроллбары с закруглением ==== */
 QScrollBar:vertical {
     background: transparent;
-    width: 8px;
+    width: 12px;
     margin: 0;
     border: none;
 }
 QScrollBar::handle:vertical {
-    background: %4;
+    background: %5;
     min-height: 24px;
-    border-radius: 4px;
-    margin: 1px;
+    border-radius: 6px;
+    margin: 2px;
 }
 QScrollBar::handle:vertical:hover {
     background: %2;
 }
-QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical {
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0;
     background: none;
 }
-QScrollBar::add-page:vertical,
-QScrollBar::sub-page:vertical {
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none;
 }
 
 QScrollBar:horizontal {
     background: transparent;
-    height: 8px;
+    height: 12px;
     margin: 0;
     border: none;
 }
 QScrollBar::handle:horizontal {
-    background: %4;
+    background: %5;
     min-width: 24px;
-    border-radius: 4px;
-    margin: 1px;
+    border-radius: 6px;
+    margin: 2px;
 }
 QScrollBar::handle:horizontal:hover {
     background: %2;
 }
-QScrollBar::add-line:horizontal,
-QScrollBar::sub-line:horizontal {
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     width: 0;
     background: none;
 }
-QScrollBar::add-page:horizontal,
-QScrollBar::sub-page:horizontal {
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
     background: none;
 }
 

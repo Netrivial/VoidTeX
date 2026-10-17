@@ -38,6 +38,7 @@ Editor::Editor(QWidget *parent)
     setFrameShape(QFrame::NoFrame);
 
     applyTheme();
+    setObjectName("Editor");
 
     m_highlightMode = currentLineHighlightFromString(
         SettingsManager::instance().stringValue(SettingsKeys::CurrentLineMode, "both"));
@@ -179,13 +180,6 @@ void Editor::applyTheme()
 
     setTabStopDistance(tm.size("tabWidthInSpaces")
                        * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
-
-    QPalette pal = palette();
-    pal.setColor(QPalette::Base,            tm.color("editorBg"));
-    pal.setColor(QPalette::Text,            tm.color("editorFg"));
-    pal.setColor(QPalette::Highlight,       tm.color("editorSelection"));
-    pal.setColor(QPalette::HighlightedText, tm.color("editorSelectionFg"));
-    setPalette(pal);
 
     highlightCurrentLine();
     m_lineNumberArea->update();

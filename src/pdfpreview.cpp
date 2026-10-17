@@ -19,6 +19,7 @@ PdfPreview::PdfPreview(QWidget *parent)
     m_view->setZoomMode(QPdfView::ZoomMode::Custom);
     m_view->setZoomFactor(1.0);
     m_view->viewport()->installEventFilter(this);
+    m_view->setFrameShape(QFrame::NoFrame);
 
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
