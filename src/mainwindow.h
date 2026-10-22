@@ -6,6 +6,8 @@
 #include <QMainWindow>
 #include <QStringList>
 
+class WelcomePage;
+class QStackedWidget;
 class QAction;
 class QDockWidget;
 class QMenu;
@@ -60,6 +62,9 @@ private:
 
     void showPdfPreview(const QString &pdfPath);
     void clearPdfPreview();
+
+    QStackedWidget *m_centralStack = nullptr;
+    WelcomePage    *m_welcomePage  = nullptr;
 
     // Actions
     QAction *m_actionNew     = nullptr;

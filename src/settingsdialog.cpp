@@ -1,7 +1,6 @@
 #include "settingsdialog.h"
 #include "settingsmanager.h"
 
-
 #include <QCheckBox>
 #include <QComboBox>
 #include <QPushButton>
@@ -56,6 +55,9 @@ QWidget *SettingsDialog::createGeneralTab()
     m_themeCombo->addItem("Crimson Void", "crimson_void");
     form->addRow(tr("Тема оформления:"), m_themeCombo);
 
+    m_showWelcome = new QCheckBox(tr("Показывать приветственное окно при запуске"));
+    form->addRow(m_showWelcome);
+
     return w;
 }
 
@@ -93,6 +95,9 @@ QWidget *SettingsDialog::createPreviewTab()
     m_showPdfOnStartup = new QCheckBox(tr("Показывать PDF-превью при запуске"));
     form->addRow(m_showPdfOnStartup);
 
+    m_showPdfOnCompile = new QCheckBox(tr("Открывать PDF после успешной компиляции"));
+    form->addRow(m_showPdfOnCompile);
+
     return w;
 }
 
@@ -100,6 +105,9 @@ QWidget *SettingsDialog::createBuildTab()
 {
     auto *w = new QWidget;
     auto *form = new QFormLayout(w);
+
+    m_showLogsOnCompile = new QCheckBox(tr("Показывать логи при компиляции"));
+    form->addRow(m_showLogsOnCompile);
 
     m_autoCompile = new QCheckBox(tr("Автокомпиляция при сохранении файла"));
     form->addRow(m_autoCompile);
@@ -119,6 +127,8 @@ void SettingsDialog::loadFromSettings()
     if (themeIdx >= 0)
         m_themeCombo->setCurrentIndex(themeIdx);
 
+    m_showWelcome->setChecked(SettingsManager::instance().boolValue(SettingsKeys::ShowWelcomeScreen, true));
+
     // Editor
     const QString lineMode = s.stringValue(SettingsKeys::CurrentLineMode, "both");
     const int lineIdx = m_lineModeCombo->findData(lineMode);
@@ -132,6 +142,8 @@ void SettingsDialog::loadFromSettings()
     // Preview
     m_showPdfOnStartup->setChecked(
         s.boolValue(SettingsKeys::ShowPdfOnStartup, false));
+    m_showPdfOnCompile->setChecked(
+        s.boolValue(SettingsKeys::ShowPdfOnCompile, true));
 
     // Build
     m_autoCompile->setChecked(
@@ -145,12 +157,15 @@ void SettingsDialog::saveToSettings()
     s.setValue(SettingsKeys::ThemeName,
                m_themeCombo->currentData().toString());
 
+    s.setValue(SettingsKeys::ShowWelcomeScreen, m_showWelcome->isChecked());
+
     s.setValue(SettingsKeys::CurrentLineMode,
                m_lineModeCombo->currentData().toString());
     s.setValue(SettingsKeys::EditorZoomPercent, m_zoomSpin->value());
     s.setValue(SettingsKeys::NewFileTemplate, m_templateEdit->toPlainText());
 
     s.setValue(SettingsKeys::ShowPdfOnStartup, m_showPdfOnStartup->isChecked());
+    s.setValue(SettingsKeys::ShowPdfOnCompile, m_showPdfOnCompile->isChecked());
 
     s.setValue(SettingsKeys::AutoCompileOnSave, m_autoCompile->isChecked());
 }

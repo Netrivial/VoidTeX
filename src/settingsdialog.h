@@ -30,21 +30,26 @@ private:
     void loadFromSettings();
     void saveToSettings();
 
-    QTabWidget     *m_tabs = nullptr;
+    QTabWidget     *m_tabs              = nullptr;
 
     // General
-    QComboBox      *m_themeCombo = nullptr;
+    QComboBox      *m_themeCombo        = nullptr;
 
     // Editor
-    QComboBox      *m_lineModeCombo = nullptr;
-    QSpinBox       *m_zoomSpin = nullptr;
-    QPlainTextEdit *m_templateEdit = nullptr;
+    QComboBox      *m_lineModeCombo     = nullptr;
+    QSpinBox       *m_zoomSpin          = nullptr;
+    QPlainTextEdit *m_templateEdit      = nullptr;
 
     // Preview
-    QCheckBox      *m_showPdfOnStartup = nullptr;
+    QCheckBox      *m_showPdfOnStartup  = nullptr;
+    QCheckBox      *m_showPdfOnCompile  = nullptr;
+    QCheckBox      *m_showLogsOnCompile = nullptr;
+
+    // Welcome page
+    QCheckBox      *m_showWelcome       = nullptr;
 
     // Build
-    QCheckBox      *m_autoCompile = nullptr;
+    QCheckBox      *m_autoCompile       = nullptr;
 };
 
 #endif // SETTINGSDIALOG_H

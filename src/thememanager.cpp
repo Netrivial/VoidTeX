@@ -348,6 +348,46 @@ QCheckBox::indicator:disabled {
     background: %3;
     border: 1px solid %4;
 }
+
+/* ==== Welcome Page ==== */
+#WelcomePage {
+    background-color: %1;
+}
+#WelcomePage QLabel {
+    color: %2;
+}
+#WelcomePage QPushButton {
+    background-color: %3;
+    color: %2;
+    border: 1px solid %4;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+}
+#WelcomePage QPushButton:hover {
+    background-color: %5;
+    border: 1px solid %6;
+}
+#WelcomePage QListWidget {
+    background-color: %1;
+    color: %2;
+    border: 1px solid %4;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 14px;
+}
+#WelcomePage QListWidget::item {
+    padding: 10px;
+    border-radius: 4px;
+}
+#WelcomePage QListWidget::item:hover {
+    background-color: %5;
+}
+#WelcomePage QListWidget::item:selected {
+    background-color: %6;
+    color: %1;
+}
 )").arg(bg, fg, panelBg, border, hover, accent);
 
     qApp->setStyleSheet(qss);

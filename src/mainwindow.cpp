@@ -2,10 +2,12 @@
 #include "settingsmanager.h"
 #include "settingsdialog.h"
 #include "thememanager.h"
+#include "welcomepage.h"
 #include "editor.h"
 #include "compiler.h"
 #include "pdfpreview.h"
 
+#include <QStackedWidget>
 #include <QAction>
 #include <QApplication>
 #include <QDockWidget>
@@ -95,16 +97,38 @@ MainWindow::MainWindow(QWidget *parent)
                     m_pdfDock->setVisible(value.toBool());
                 }
             });
+
+    const bool showWelcome = SettingsManager::instance()
+                                 .boolValue(SettingsKeys::ShowWelcomeScreen, true);
+
+    if (showWelcome && m_currentFilePath.isEmpty()) {
+        m_centralStack->setCurrentWidget(m_welcomePage);
+    } else {
+        m_centralStack->setCurrentWidget(m_editor);
+    }
 }
 
 MainWindow::~MainWindow() = default;
 
 void MainWindow::createCentralAndDocks()
 {
+    m_centralStack = new QStackedWidget(this);
+
     m_editor = new Editor(this);
-    setCentralWidget(m_editor);
-    connect(m_editor->document(), &QTextDocument::modificationChanged,
-            this, &MainWindow::onDocumentModifiedChanged);
+    m_welcomePage = new WelcomePage(this);
+
+    m_centralStack->addWidget(m_welcomePage);
+    m_centralStack->addWidget(m_editor);
+
+    setCentralWidget(m_centralStack);
+
+    connect(m_welcomePage, &WelcomePage::newFileRequested, this, &MainWindow::onNew);
+    connect(m_welcomePage, &WelcomePage::openFileRequested, this, &MainWindow::onOpen);
+    connect(m_welcomePage, &WelcomePage::settingsRequested, this, &MainWindow::onSettings);
+    connect(m_welcomePage, &WelcomePage::recentFileRequested, this, [this](const QString &path) {
+        if (!maybeSave()) return;
+        loadFile(path);
+    });
 
     m_log = new QPlainTextEdit(this);
     m_log->setReadOnly(true);
@@ -116,6 +140,7 @@ void MainWindow::createCentralAndDocks()
     m_logDock->setWidget(m_log);
     m_logDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
     addDockWidget(Qt::BottomDockWidgetArea, m_logDock);
+    m_logDock->hide();
 
     m_pdfPreview = new PdfPreview(this);
 
@@ -239,6 +264,7 @@ void MainWindow::onNew()
 {
     if (!maybeSave()) return;
 
+    m_centralStack->setCurrentWidget(m_editor);
     m_editor->setPlainText(QString::fromUtf8(kNewFileTemplate));
     m_editor->document()->setModified(false);
     m_currentFilePath.clear();
@@ -317,6 +343,9 @@ void MainWindow::onCompile()
     m_log->clear();
     m_log->appendPlainText(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
 
+    m_logDock->show();
+    m_logDock->raise();
+
     const auto job = m_compiler->makeDefaultJob(m_currentFilePath);
     m_compiler->run(job);
 }
@@ -342,10 +371,11 @@ void MainWindow::onCompilerFinished(const Compiler::Result &result)
         statusBar()->showMessage(tr("Сборка успешна: %1").arg(result.pdfPath), 5000);
         m_log->appendPlainText(tr("=== Успех ==="));
 
-        showPdfPreview(result.pdfPath);
-
-        if (!m_pdfDock->isVisible())
+        if (SettingsManager::instance().boolValue(SettingsKeys::ShowPdfOnCompile, true)) {
+            showPdfPreview(result.pdfPath);
             m_pdfDock->show();
+        }
+
     } else {
         statusBar()->showMessage(tr("Сборка завершилась с ошибкой (код %1)").arg(result.exitCode), 5000);
         m_log->appendPlainText(tr("=== Ошибка ==="));
@@ -358,7 +388,7 @@ void MainWindow::showPdfPreview(const QString &pdfPath)
 {
     if (m_pdfPreview) {
         m_pdfDock->setWidget(nullptr);
-        m_pdfPreview->deleteLater();
+    delete m_pdfPreview;
         m_pdfPreview = nullptr;
     }
 
@@ -371,7 +401,7 @@ void MainWindow::clearPdfPreview()
 {
     if (m_pdfPreview) {
         m_pdfDock->setWidget(nullptr);
-        m_pdfPreview->deleteLater();
+        delete m_pdfPreview;
         m_pdfPreview = nullptr;
     }
 }
@@ -396,6 +426,7 @@ bool MainWindow::loadFile(const QString &path)
 
     QTextStream in(&file);
     in.setEncoding(QStringConverter::Utf8);
+    m_centralStack->setCurrentWidget(m_editor);
     m_editor->setPlainText(in.readAll());
     showPdfPreview("");
     m_editor->document()->setModified(false);
@@ -453,8 +484,22 @@ bool MainWindow::maybeSave()
 
 void MainWindow::onClose()
 {
-    if (maybeSave())
-        close();
+    if (maybeSave()) {
+        m_currentFilePath.clear();
+        m_editor->clear();
+        updateWindowTitle();
+        m_centralStack->setCurrentWidget(m_welcomePage);
+
+        m_log->clear();
+        m_logDock->hide();
+
+        m_pdfDock->setWidget(nullptr);
+        if (m_pdfPreview) {
+            delete m_pdfPreview;
+            m_pdfPreview = nullptr;
+        }
+        m_pdfDock->hide();
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -475,7 +520,7 @@ void MainWindow::onOpenRecent()
         QMessageBox::warning(this, tr("VoidTeX"),
                              tr("Файл больше не существует:\n%1").arg(path));
         m_recentFiles.removeAll(path);
-    SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
+        SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
         updateRecentFilesMenu();
         return;
     }
@@ -503,8 +548,11 @@ void MainWindow::addToRecentFiles(const QString &path)
 
 void MainWindow::updateRecentFilesMenu()
 {
-    if (!m_recentFilesMenu) return;
+    if (m_welcomePage) {
+        m_welcomePage->setRecentFiles(m_recentFiles);
+    }
 
+    if (!m_recentFilesMenu) return;
     m_recentFilesMenu->clear();
 
     if (m_recentFiles.isEmpty()) {
