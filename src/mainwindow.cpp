@@ -32,7 +32,7 @@
 #include <QUrl>
 #include <QTimer>
 
-// start LaTeX code
+// start (default) LaTeX code
 namespace {
 const char *kNewFileTemplate = R"(\documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -265,7 +265,13 @@ void MainWindow::onNew()
     if (!maybeSave()) return;
 
     m_centralStack->setCurrentWidget(m_editor);
-    m_editor->setPlainText(QString::fromUtf8(kNewFileTemplate));
+
+    QString tmpl = SettingsManager::instance().stringValue(SettingsKeys::NewFileTemplate);
+    if (tmpl.isEmpty()) {
+        tmpl = QString::fromUtf8(kNewFileTemplate);
+    }
+
+    m_editor->setPlainText(tmpl);
     m_editor->document()->setModified(false);
     m_currentFilePath.clear();
     showPdfPreview("");

@@ -1,4 +1,5 @@
 #include "editor.h"
+#include "settingsmanager.h"
 #include "thememanager.h"
 #include "latexhighlighter.h"
 
@@ -57,6 +58,14 @@ Editor::Editor(QWidget *parent)
             this, &Editor::updateLineNumberArea);
     connect(this, &Editor::cursorPositionChanged,
             this, &Editor::highlightCurrentLine);
+
+    connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
+            this, [this](const QString &key, const QVariant &value) {
+                if (key == SettingsKeys::EditorZoomPercent) {
+                    applyTheme();
+                }
+            });
+
 
     m_highlighter = new LatexHighlighter(document());
 
@@ -175,12 +184,19 @@ void Editor::applyTheme()
     auto &tm = ThemeManager::instance();
 
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    f.setPointSize(tm.size("fontPointSize"));
+    int baseSize = tm.size("fontPointSize");
+    if (baseSize <= 0) baseSize = 12;
+
+    int zoomPercent = SettingsManager::instance().intValue(SettingsKeys::EditorZoomPercent, 100);
+    int finalSize = qMax(1, (baseSize * zoomPercent) / 100);
+
+    f.setPointSize(finalSize);
     setFont(f);
 
-    setTabStopDistance(tm.size("tabWidthInSpaces")
-                       * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
+    setTabStopDistance(tm.size("tabWidthInSpaces") * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
 
     highlightCurrentLine();
     m_lineNumberArea->update();
+
+    updateLineNumberAreaWidth(0);
 }
