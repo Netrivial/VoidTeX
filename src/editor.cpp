@@ -143,6 +143,7 @@ void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
     auto &tm = ThemeManager::instance();
 
     QPainter painter(m_lineNumberArea);
+    painter.setFont(font());
     painter.fillRect(event->rect(), tm.color("lineNumberBg"));
 
     const bool highlightNumber =

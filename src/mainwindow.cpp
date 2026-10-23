@@ -349,8 +349,10 @@ void MainWindow::onCompile()
     m_log->clear();
     m_log->appendPlainText(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
 
-    m_logDock->show();
-    m_logDock->raise();
+    if (SettingsManager::instance().boolValue(SettingsKeys::ShowLogsOnCompile, true)) {
+        m_logDock->show();
+        m_logDock->raise();
+    }
 
     const auto job = m_compiler->makeDefaultJob(m_currentFilePath);
     m_compiler->run(job);

@@ -95,7 +95,7 @@ QWidget *SettingsDialog::createPreviewTab()
     m_showPdfOnStartup = new QCheckBox(tr("Показывать PDF-превью при запуске"));
     form->addRow(m_showPdfOnStartup);
 
-    m_showPdfOnCompile = new QCheckBox(tr("Открывать PDF после успешной компиляции"));
+    m_showPdfOnCompile = new QCheckBox(tr("Показывать PDF-превью после успешной компиляции"));
     form->addRow(m_showPdfOnCompile);
 
     return w;
@@ -135,9 +135,14 @@ void SettingsDialog::loadFromSettings()
     if (lineIdx >= 0)
         m_lineModeCombo->setCurrentIndex(lineIdx);
 
-    m_zoomSpin->setValue(s.intValue(SettingsKeys::EditorZoomPercent, 100));
+    m_zoomSpin->setValue(
+        s.intValue(SettingsKeys::EditorZoomPercent, 100));
     m_templateEdit->setPlainText(
         s.stringValue(SettingsKeys::NewFileTemplate, QString()));
+
+    // logs
+    m_showLogsOnCompile->setChecked(
+        s.boolValue(SettingsKeys::ShowLogsOnCompile, true));
 
     // Preview
     m_showPdfOnStartup->setChecked(
@@ -157,17 +162,26 @@ void SettingsDialog::saveToSettings()
     s.setValue(SettingsKeys::ThemeName,
                m_themeCombo->currentData().toString());
 
-    s.setValue(SettingsKeys::ShowWelcomeScreen, m_showWelcome->isChecked());
+    s.setValue(SettingsKeys::ShowWelcomeScreen,
+               m_showWelcome->isChecked());
 
     s.setValue(SettingsKeys::CurrentLineMode,
                m_lineModeCombo->currentData().toString());
-    s.setValue(SettingsKeys::EditorZoomPercent, m_zoomSpin->value());
-    s.setValue(SettingsKeys::NewFileTemplate, m_templateEdit->toPlainText());
+    s.setValue(SettingsKeys::EditorZoomPercent,
+               m_zoomSpin->value());
+    s.setValue(SettingsKeys::NewFileTemplate,
+               m_templateEdit->toPlainText());
 
-    s.setValue(SettingsKeys::ShowPdfOnStartup, m_showPdfOnStartup->isChecked());
-    s.setValue(SettingsKeys::ShowPdfOnCompile, m_showPdfOnCompile->isChecked());
+    s.setValue(SettingsKeys::ShowLogsOnCompile,
+               m_showLogsOnCompile->isChecked());
 
-    s.setValue(SettingsKeys::AutoCompileOnSave, m_autoCompile->isChecked());
+    s.setValue(SettingsKeys::ShowPdfOnStartup,
+               m_showPdfOnStartup->isChecked());
+    s.setValue(SettingsKeys::ShowPdfOnCompile,
+               m_showPdfOnCompile->isChecked());
+
+    s.setValue(SettingsKeys::AutoCompileOnSave,
+               m_autoCompile->isChecked());
 }
 
 void SettingsDialog::apply()
