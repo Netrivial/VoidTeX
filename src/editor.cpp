@@ -51,6 +51,11 @@ Editor::Editor(QWidget *parent)
                     m_lineNumberArea->update();
                 }
             });
+    connect(this, &QPlainTextEdit::textChanged, this, [this]() {
+        if (m_errorLine > 0) {
+            clearErrorLine();
+        }
+    });
 
     connect(this, &Editor::blockCountChanged,
             this, &Editor::updateLineNumberAreaWidth);
@@ -102,6 +107,32 @@ void Editor::updateLineNumberArea(const QRect &rect, int dy)
     }
 }
 
+void Editor::gotoLine(int line)
+{
+    QTextBlock block = document()->findBlockByNumber(line - 1);
+    if (!block.isValid())
+        return;
+
+    QTextCursor cursor(block);
+    setTextCursor(cursor);
+
+    centerCursor();
+
+    setFocus();
+}
+
+void Editor::setErrorLine(int line)
+{
+    m_errorLine = line;
+    highlightCurrentLine();
+}
+
+void Editor::clearErrorLine()
+{
+    m_errorLine = -1;
+    highlightCurrentLine();
+}
+
 void Editor::resizeEvent(QResizeEvent *event)
 {
     QPlainTextEdit::resizeEvent(event);
@@ -113,15 +144,11 @@ void Editor::resizeEvent(QResizeEvent *event)
 
 void Editor::highlightCurrentLine()
 {
+    QList<QTextEdit::ExtraSelection> selections;
+
     const bool wantBackground =
         (m_highlightMode == CurrentLineHighlight::LineBackground ||
          m_highlightMode == CurrentLineHighlight::Both);
-
-    const bool wantNumber =
-        (m_highlightMode == CurrentLineHighlight::LineNumberOnly ||
-         m_highlightMode == CurrentLineHighlight::Both);
-
-    QList<QTextEdit::ExtraSelection> selections;
 
     if (wantBackground && !isReadOnly()) {
         QTextEdit::ExtraSelection sel;
@@ -132,10 +159,26 @@ void Editor::highlightCurrentLine()
         selections.append(sel);
     }
 
+    if (m_errorLine > 0) {
+        QTextBlock block = document()->findBlockByNumber(m_errorLine - 1);
+        if (block.isValid()) {
+            QTextEdit::ExtraSelection sel;
+
+            sel.format.setBackground(QColor(255, 0, 0, 60));
+            sel.format.setProperty(QTextFormat::FullWidthSelection, true);
+            sel.cursor = QTextCursor(block);
+            sel.cursor.clearSelection();
+            selections.append(sel);
+        }
+    }
+
     setExtraSelections(selections);
 
-    if (wantNumber || m_highlightMode == CurrentLineHighlight::None)
+    if (m_highlightMode == CurrentLineHighlight::LineNumberOnly ||
+        m_highlightMode == CurrentLineHighlight::Both ||
+        m_highlightMode == CurrentLineHighlight::None) {
         m_lineNumberArea->update();
+    }
 }
 
 void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)

@@ -130,8 +130,12 @@ void MainWindow::createCentralAndDocks()
     m_log = new LogPanel(this);
 
     connect(m_log, &LogPanel::messageClicked, this, [this](const QString &file, int line) {
-        statusBar()->showMessage(tr("Клик по ошибке: %1, строка %2").arg(file).arg(line), 5000);
-        // TODO: M7c - прыжок к строке в редакторе
+        if (QFileInfo(file).fileName() == QFileInfo(m_currentFilePath).fileName()) {
+            m_editor->gotoLine(line);
+            m_editor->setErrorLine(line);
+        } else {
+            statusBar()->showMessage(tr("Ошибка в другом файле: %1, строка %2").arg(file).arg(line), 5000);
+        }
     });
 
     m_logDock = new QDockWidget(tr("Logs"), this);
@@ -352,6 +356,8 @@ void MainWindow::onCompile()
         m_logDock->show();
         m_logDock->raise();
     }
+
+    m_editor->clearErrorLine();
 
     const auto job = m_compiler->makeDefaultJob(m_currentFilePath);
     m_compiler->run(job);

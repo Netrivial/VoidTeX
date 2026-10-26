@@ -33,6 +33,10 @@ public:
     int  lineNumberAreaWidth() const;
     void lineNumberAreaPaintEvent(QPaintEvent *event);
 
+    void gotoLine(int line);
+    void setErrorLine(int line);
+    void clearErrorLine();
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
@@ -46,6 +50,8 @@ private:
     LineNumberArea    *m_lineNumberArea;
     LatexHighlighter  *m_highlighter = nullptr;
     CurrentLineHighlight m_highlightMode = CurrentLineHighlight::Both;
+
+    int m_errorLine = -1;
 };
 
 #endif // EDITOR_H
