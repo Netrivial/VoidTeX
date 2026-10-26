@@ -11,14 +11,18 @@ LogPanel::LogPanel(QWidget *parent)
     setPlaceholderText(tr("Здесь будут сообщения компилятора..."));
     setObjectName("LogPanel");
 
-    connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this]() {
-        clear();
-    });
+    connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, &LogPanel::retint);
 }
 
 void LogPanel::appendInfo(const QString &text)
 {
     appendStyledText(text, ThemeManager::instance().color("editorFg"), {});
+}
+
+void LogPanel::clear()
+{
+    m_messages.clear();
+    QPlainTextEdit::clear();
 }
 
 void LogPanel::appendMessage(const Compiler::Message &msg)
@@ -68,4 +72,32 @@ void LogPanel::mousePressEvent(QMouseEvent *e)
     }
 
     QPlainTextEdit::mousePressEvent(e);
+}
+
+void LogPanel::retint()
+{
+    QTextBlock block = document()->firstBlock();
+
+    while (block.isValid()) {
+        QTextCursor cursor(block);
+        cursor.select(QTextCursor::BlockUnderCursor);
+
+        QTextCharFormat fmt;
+
+        if (m_messages.contains(block.blockNumber())) {
+            const auto &msg = m_messages.value(block.blockNumber());
+            if (msg.type == Compiler::MessageType::Error) {
+                fmt.setForeground(ThemeManager::instance().color("latexCommand"));
+                fmt.setFontWeight(QFont::Bold);
+                fmt.setFontUnderline(true);
+            } else if (msg.type == Compiler::MessageType::Warning) {
+                fmt.setForeground(QColor("orange"));
+            }
+        } else {
+            fmt.setForeground(ThemeManager::instance().color("editorFg"));
+        }
+
+        cursor.setCharFormat(fmt);
+        block = block.next();
+    }
 }

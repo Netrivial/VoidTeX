@@ -14,6 +14,7 @@ public:
 
     void appendMessage(const Compiler::Message &msg);
     void appendInfo(const QString &text);
+    void clear();
 
 signals:
     void messageClicked(const QString &file, int line);
@@ -23,6 +24,7 @@ protected:
 
 private:
     void appendStyledText(const QString &text, const QColor &color, const Compiler::Message &msg = {});
+    void retint();
 
     QHash<int, Compiler::Message> m_messages;
 };
