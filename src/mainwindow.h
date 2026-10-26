@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "compiler.h"
+#include "logpanel.h"
 
 #include <QMainWindow>
 #include <QStringList>
@@ -44,6 +45,7 @@ private slots:
     void onCompilerStarted(const QString &program, const QStringList &arguments);
     void onCompilerOutput(const QString &line);
     void onCompilerFinished(const Compiler::Result &result);
+    void onCompilerMessage(const Compiler::Message &msg);
     void onSettings();
 
 private:
@@ -81,7 +83,7 @@ private:
 
     // Widgets
     Editor         *m_editor = nullptr;
-    QPlainTextEdit *m_log    = nullptr;
+    LogPanel *m_log          = nullptr;
     QDockWidget   *m_logDock = nullptr;
     Compiler *m_compiler     = nullptr;
     PdfPreview *m_pdfPreview = nullptr;

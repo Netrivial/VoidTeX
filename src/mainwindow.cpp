@@ -15,7 +15,6 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QPlainTextEdit>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QFile>
@@ -23,7 +22,6 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QCloseEvent>
-#include <QSettings>
 #include <QTextStream>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -65,8 +63,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_compiler, &Compiler::started,       this, &MainWindow::onCompilerStarted);
     connect(m_compiler, &Compiler::outputLine,    this, &MainWindow::onCompilerOutput);
+    connect(m_compiler, &Compiler::messageParsed, this, &MainWindow::onCompilerMessage);
     connect(m_compiler, &Compiler::finished,      this, &MainWindow::onCompilerFinished);
-
 
     createCentralAndDocks();
     createActions();
@@ -84,7 +82,6 @@ MainWindow::MainWindow(QWidget *parent)
     updateRecentFilesMenu();
     updateWindowTitle();
 
-    // Drag and drop
     setAcceptDrops(true);
 
     const bool showPdf = SettingsManager::instance()
@@ -130,10 +127,12 @@ void MainWindow::createCentralAndDocks()
         loadFile(path);
     });
 
-    m_log = new QPlainTextEdit(this);
-    m_log->setReadOnly(true);
-    m_log->setPlaceholderText(tr("Здесь будут сообщения компилятора..."));
-    m_log->setObjectName("LogPanel");
+    m_log = new LogPanel(this);
+
+    connect(m_log, &LogPanel::messageClicked, this, [this](const QString &file, int line) {
+        statusBar()->showMessage(tr("Клик по ошибке: %1, строка %2").arg(file).arg(line), 5000);
+        // TODO: M7c - прыжок к строке в редакторе
+    });
 
     m_logDock = new QDockWidget(tr("Logs"), this);
     m_logDock->setObjectName("LogsDock");
@@ -347,7 +346,7 @@ void MainWindow::onCompile()
     }
 
     m_log->clear();
-    m_log->appendPlainText(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
+    m_log->appendInfo(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
 
     if (SettingsManager::instance().boolValue(SettingsKeys::ShowLogsOnCompile, true)) {
         m_logDock->show();
@@ -368,7 +367,12 @@ void MainWindow::onCompilerStarted(const QString &program, const QStringList &ar
 
 void MainWindow::onCompilerOutput(const QString &line)
 {
-    m_log->appendPlainText(line);
+    m_log->appendInfo(line);
+}
+
+void MainWindow::onCompilerMessage(const Compiler::Message &msg)
+{
+    m_log->appendMessage(msg);
 }
 
 void MainWindow::onCompilerFinished(const Compiler::Result &result)
@@ -377,7 +381,7 @@ void MainWindow::onCompilerFinished(const Compiler::Result &result)
 
     if (result.success) {
         statusBar()->showMessage(tr("Сборка успешна: %1").arg(result.pdfPath), 5000);
-        m_log->appendPlainText(tr("=== Успех ==="));
+        m_log->appendInfo(tr("=== Успех ==="));
 
         if (SettingsManager::instance().boolValue(SettingsKeys::ShowPdfOnCompile, true)) {
             showPdfPreview(result.pdfPath);
@@ -386,23 +390,10 @@ void MainWindow::onCompilerFinished(const Compiler::Result &result)
 
     } else {
         statusBar()->showMessage(tr("Сборка завершилась с ошибкой (код %1)").arg(result.exitCode), 5000);
-        m_log->appendPlainText(tr("=== Ошибка ==="));
+        m_log->appendInfo(tr("=== Ошибка ==="));
         if (!result.errorMessage.isEmpty())
-            m_log->appendPlainText(result.errorMessage);
+            m_log->appendInfo(result.errorMessage);
     }
-}
-
-void MainWindow::showPdfPreview(const QString &pdfPath)
-{
-    if (m_pdfPreview) {
-        m_pdfDock->setWidget(nullptr);
-    delete m_pdfPreview;
-        m_pdfPreview = nullptr;
-    }
-
-    m_pdfPreview = new PdfPreview(this);
-    m_pdfDock->setWidget(m_pdfPreview);
-    m_pdfPreview->loadPdf(pdfPath);
 }
 
 void MainWindow::clearPdfPreview()
@@ -412,6 +403,15 @@ void MainWindow::clearPdfPreview()
         delete m_pdfPreview;
         m_pdfPreview = nullptr;
     }
+}
+
+void MainWindow::showPdfPreview(const QString &pdfPath)
+{
+    clearPdfPreview();
+
+    m_pdfPreview = new PdfPreview(this);
+    m_pdfDock->setWidget(m_pdfPreview);
+    m_pdfPreview->loadPdf(pdfPath);
 }
 
 void MainWindow::onAbout()
@@ -465,6 +465,7 @@ bool MainWindow::saveToDisk(const QString &path)
     addToRecentFiles(path);
     updateWindowTitle();
     statusBar()->showMessage(tr("Сохранено: %1").arg(path), 3000);
+
     if (SettingsManager::instance().boolValue(SettingsKeys::AutoCompileOnSave, false)) {
         QTimer::singleShot(50, this, &MainWindow::onCompile);
     }
@@ -501,11 +502,7 @@ void MainWindow::onClose()
         m_log->clear();
         m_logDock->hide();
 
-        m_pdfDock->setWidget(nullptr);
-        if (m_pdfPreview) {
-            delete m_pdfPreview;
-            m_pdfPreview = nullptr;
-        }
+        clearPdfPreview();
         m_pdfDock->hide();
     }
 }

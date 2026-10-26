@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
+#include <QRegularExpression>
 
 Compiler::Compiler(QObject *parent)
     : QObject(parent)
@@ -100,7 +101,24 @@ void Compiler::emitBufferLines(QByteArray &buffer, bool flushAll)
     while (!flushAll && (idx = buffer.indexOf('\n')) != -1) {
         const QByteArray line = buffer.left(idx);
         buffer.remove(0, idx + 1);
-        emit outputLine(QString::fromLocal8Bit(line).trimmed());
+        const QString strLine = QString::fromLocal8Bit(line).trimmed();
+
+        if (strLine.isEmpty()) continue;
+
+        emit outputLine(strLine);
+
+        static const QRegularExpression errRegex(R"(^(.+):(\d+): (.+)$)");
+        auto match = errRegex.match(strLine);
+
+        if (match.hasMatch()) {
+            Message msg;
+            msg.type = MessageType::Error;
+            msg.file = match.captured(1);
+            msg.line = match.captured(2).toInt();
+            msg.text = match.captured(3);
+            msg.rawLine = strLine;
+            emit messageParsed(msg);
+        }
     }
     if (flushAll && !buffer.isEmpty()) {
         emit outputLine(QString::fromLocal8Bit(buffer).trimmed());

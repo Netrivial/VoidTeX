@@ -22,10 +22,20 @@ public:
 
     struct Result
     {
-        bool    success = false;
+        bool    success  = false;
         int     exitCode = -1;
         QString pdfPath;
         QString errorMessage;
+    };
+
+    enum class MessageType { Info, Warning, Error };
+
+    struct Message {
+        MessageType type = MessageType::Info;
+        QString     file;
+        int         line = -1;
+        QString     text;
+        QString     rawLine;
     };
 
     explicit Compiler(QObject *parent = nullptr);
@@ -44,6 +54,7 @@ public slots:
 signals:
     void started(const QString &program, const QStringList &arguments);
     void outputLine(const QString &line);
+    void messageParsed(const Compiler::Message &msg);
     void finished(const Compiler::Result &result);
 
 private slots:
