@@ -10,6 +10,7 @@
         "lineNumberBg":        "#0d0003",
         "lineNumberFg":        "#7a3540",
         "lineNumberBorder":    "#2a0a0f",
+        "errorBg":             "#30ff0000",
 
         "latexCommand":        "#ff4466",
         "latexComment":        "#7a4550",

@@ -6,6 +6,7 @@
 #include "editor.h"
 #include "compiler.h"
 #include "pdfpreview.h"
+#include "filetree.h"
 
 #include <QStackedWidget>
 #include <QAction>
@@ -152,6 +153,18 @@ void MainWindow::createCentralAndDocks()
     m_pdfDock->setWidget(m_pdfPreview);
     m_pdfDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, m_pdfDock);
+
+    m_fileTree = new FileTree(this);
+    m_projectDock = new QDockWidget(tr("Project"), this);
+    m_projectDock->setObjectName("ProjectDock");
+    m_projectDock->setWidget(m_fileTree);
+    addDockWidget(Qt::LeftDockWidgetArea, m_projectDock);
+    m_projectDock->hide();
+
+    connect(m_fileTree, &FileTree::fileDoubleClicked, this, [this](const QString &path) {
+        if (!maybeSave()) return;
+        loadFile(path);
+    });
 }
 
 void MainWindow::createActions()
@@ -213,6 +226,11 @@ void MainWindow::createActions()
 
     m_actionAboutQt = new QAction(tr("About &Qt"), this);
     connect(m_actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
+
+    // --- File tree ---
+    m_actionOpenFolder = new QAction(tr("Open &Folder..."), this);
+    m_actionOpenFolder->setShortcut(QKeySequence("Ctrl+Shift+O"));
+    connect(m_actionOpenFolder, &QAction::triggered, this, &MainWindow::onOpenFolder);
 }
 
 void MainWindow::createMenus()
@@ -222,6 +240,7 @@ void MainWindow::createMenus()
     fileMenu->addAction(m_actionOpen);
     m_recentFilesMenu = fileMenu->addMenu(tr("Open &Recent"));
     fileMenu->addSeparator();
+    fileMenu->insertAction(m_actionSave, m_actionOpenFolder);
     fileMenu->addAction(m_actionSave);
     fileMenu->addAction(m_actionSaveAs);
     fileMenu->addSeparator();
@@ -239,6 +258,7 @@ void MainWindow::createMenus()
     viewMenu->addAction(m_mainToolBar->toggleViewAction());
     viewMenu->addAction(m_logDock->toggleViewAction());
     viewMenu->addAction(m_pdfDock->toggleViewAction());
+    viewMenu->addAction(m_projectDock->toggleViewAction());
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(m_actionAbout);
@@ -588,6 +608,24 @@ void MainWindow::updateRecentFilesMenu()
         SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
         updateRecentFilesMenu();
     });
+}
+
+void MainWindow::onOpenFolder()
+{
+    const QString dir = QFileDialog::getExistingDirectory(this, tr("Открыть папку проекта"),
+                                                          m_currentProjectDir.isEmpty() ? QDir::homePath() : m_currentProjectDir);
+    if (!dir.isEmpty()) {
+        setProjectFolder(dir);
+    }
+}
+
+void MainWindow::setProjectFolder(const QString &path)
+{
+    m_currentProjectDir = path;
+    m_fileTree->setRootPath(path);
+    m_projectDock->show();
+
+    // SettingsManager::instance().setValue(SettingsKeys::LastProjectDir, path);
 }
 
 void MainWindow::updateWindowTitle()

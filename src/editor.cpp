@@ -164,7 +164,7 @@ void Editor::highlightCurrentLine()
         if (block.isValid()) {
             QTextEdit::ExtraSelection sel;
 
-            sel.format.setBackground(QColor(255, 0, 0, 60));
+            sel.format.setBackground(ThemeManager::instance().color("errorBg"));
             sel.format.setProperty(QTextFormat::FullWidthSelection, true);
             sel.cursor = QTextCursor(block);
             sel.cursor.clearSelection();

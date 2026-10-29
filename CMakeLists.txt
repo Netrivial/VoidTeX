@@ -33,6 +33,7 @@ qt_add_executable(VoidTeX
     src/settingsdialog.h src/settingsdialog.cpp
     src/welcomepage.h src/welcomepage.cpp
     src/logpanel.h src/logpanel.cpp
+    src/filetree.h src/filetree.cpp
 )
 
 target_include_directories(VoidTeX PRIVATE
