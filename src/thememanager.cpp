@@ -388,6 +388,30 @@ QCheckBox::indicator:disabled {
     background-color: %6;
     color: %1;
 }
+
+/* ==== Project Tree ==== */
+#ProjectDock QTreeView {
+    background-color: %1;
+    color: %2;
+    border: none;
+    outline: none;
+}
+#ProjectDock QTreeView::item {
+    padding: 4px;
+    border-radius: 4px;
+}
+#ProjectDock QTreeView::item:hover {
+    background-color: %5; /* currentLineBg */
+}
+#ProjectDock QTreeView::item:selected {
+    background-color: %6; /* editorSelection */
+    color: %1;
+}
+#ProjectDock QHeaderView::section {
+    background-color: %3;
+    color: %2;
+    border: none;
+}
 )").arg(bg, fg, panelBg, border, hover, accent);
 
     qApp->setStyleSheet(qss);

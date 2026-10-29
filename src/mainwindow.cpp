@@ -104,6 +104,11 @@ MainWindow::MainWindow(QWidget *parent)
     } else {
         m_centralStack->setCurrentWidget(m_editor);
     }
+
+    QString lastDir = SettingsManager::instance().stringValue(SettingsKeys::LastProjectDir);
+    if (!lastDir.isEmpty()) {
+        setProjectFolder(lastDir);
+    }
 }
 
 MainWindow::~MainWindow() = default;
@@ -625,7 +630,7 @@ void MainWindow::setProjectFolder(const QString &path)
     m_fileTree->setRootPath(path);
     m_projectDock->show();
 
-    // SettingsManager::instance().setValue(SettingsKeys::LastProjectDir, path);
+    SettingsManager::instance().setValue(SettingsKeys::LastProjectDir, path);
 }
 
 void MainWindow::updateWindowTitle()
