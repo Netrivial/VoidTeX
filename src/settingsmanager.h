@@ -65,12 +65,13 @@ inline constexpr auto CurrentLineMode   = "editor/currentLineHighlightMode";
 inline constexpr auto EditorZoomPercent = "editor/zoomPercent";
 inline constexpr auto NewFileTemplate   = "editor/newFileTemplate";
 
-inline constexpr auto ShowLogsOnCompile = "compiler/showLogsOnCompile";
 inline constexpr auto ShowPdfOnStartup  = "preview/showOnStartup";
 inline constexpr auto ShowPdfOnCompile  = "preview/showPdfOnCompile";
 inline constexpr auto PdfRenderScale    = "preview/renderScale";
 inline constexpr auto PdfZoomStep       = "preview/zoomStep";
 
+inline constexpr auto ShowLogsOnStartup = "compiler/showLogsOnStartup";
+inline constexpr auto ShowLogsOnCompile = "compiler/showLogsOnCompile";
 inline constexpr auto AutoCompileOnSave = "compiler/autoCompileOnSave";
 
 inline constexpr auto RecentFiles       = "files/recent";

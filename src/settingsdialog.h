@@ -43,12 +43,13 @@ private:
     // Preview
     QCheckBox      *m_showPdfOnStartup  = nullptr;
     QCheckBox      *m_showPdfOnCompile  = nullptr;
-    QCheckBox      *m_showLogsOnCompile = nullptr;
 
     // Welcome page
     QCheckBox      *m_showWelcome       = nullptr;
 
     // Build
+    QCheckBox      *m_showLogsOnStartup = nullptr;
+    QCheckBox      *m_showLogsOnCompile = nullptr;
     QCheckBox      *m_autoCompile       = nullptr;
 };
 

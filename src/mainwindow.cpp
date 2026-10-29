@@ -87,6 +87,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     setAcceptDrops(true);
 
+    const bool showLogs = SettingsManager::instance().boolValue(SettingsKeys::ShowLogsOnStartup, false);
+    m_logDock->setVisible(showLogs);
+
     const bool showPdf = SettingsManager::instance()
                              .boolValue(SettingsKeys::ShowPdfOnStartup, false);
     m_pdfDock->setVisible(showPdf);

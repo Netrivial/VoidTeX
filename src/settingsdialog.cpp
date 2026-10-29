@@ -106,6 +106,9 @@ QWidget *SettingsDialog::createBuildTab()
     auto *w = new QWidget;
     auto *form = new QFormLayout(w);
 
+    m_showLogsOnStartup = new QCheckBox(tr("Показывать логи при запуске"));
+    form->addRow(m_showLogsOnStartup);
+
     m_showLogsOnCompile = new QCheckBox(tr("Показывать логи при компиляции"));
     form->addRow(m_showLogsOnCompile);
 
@@ -141,6 +144,8 @@ void SettingsDialog::loadFromSettings()
         s.stringValue(SettingsKeys::NewFileTemplate, QString()));
 
     // logs
+    m_showLogsOnStartup->setChecked(
+        s.boolValue(SettingsKeys::ShowLogsOnStartup, false));
     m_showLogsOnCompile->setChecked(
         s.boolValue(SettingsKeys::ShowLogsOnCompile, true));
 
@@ -177,6 +182,8 @@ void SettingsDialog::saveToSettings()
 
     s.setValue(SettingsKeys::ShowPdfOnStartup,
                m_showPdfOnStartup->isChecked());
+    s.setValue(SettingsKeys::ShowLogsOnStartup,
+               m_showLogsOnStartup->isChecked());
     s.setValue(SettingsKeys::ShowPdfOnCompile,
                m_showPdfOnCompile->isChecked());
 
