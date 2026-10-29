@@ -73,6 +73,8 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
     createStatusBar();
 
+    restoreWindowState();
+
     connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
             this, [](const QString &key, const QVariant &value) {
                 if (key == SettingsKeys::ThemeName) {
@@ -109,8 +111,6 @@ MainWindow::MainWindow(QWidget *parent)
     if (!lastDir.isEmpty()) {
         setProjectFolder(lastDir);
     }
-
-    restoreWindowState();
 }
 
 MainWindow::~MainWindow() = default;
