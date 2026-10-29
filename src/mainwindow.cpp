@@ -73,7 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
     createStatusBar();
 
-    restoreWindowState();
+    restoreWindowState(); // i forget to make a commit M8a.2, so M8a.3 contains nothing </3
 
     connect(&SettingsManager::instance(), &SettingsManager::settingChanged,
             this, [](const QString &key, const QVariant &value) {
