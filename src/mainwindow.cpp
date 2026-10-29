@@ -109,6 +109,8 @@ MainWindow::MainWindow(QWidget *parent)
     if (!lastDir.isEmpty()) {
         setProjectFolder(lastDir);
     }
+
+    restoreWindowState();
 }
 
 MainWindow::~MainWindow() = default;
@@ -540,8 +542,10 @@ void MainWindow::onClose()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (maybeSave())
+    if (maybeSave()) {
+        saveWindowState();
         event->accept();
+    }
     else
         event->ignore();
 }
@@ -622,6 +626,24 @@ void MainWindow::onOpenFolder()
     if (!dir.isEmpty()) {
         setProjectFolder(dir);
     }
+}
+
+void MainWindow::saveWindowState()
+{
+    auto &s = SettingsManager::instance();
+    s.setValue("window/geometry", saveGeometry());
+    s.setValue("window/state", saveState());
+}
+
+void MainWindow::restoreWindowState()
+{
+    auto &s = SettingsManager::instance();
+
+    QByteArray geo = s.value("window/geometry").toByteArray();
+    if (!geo.isEmpty()) restoreGeometry(geo);
+
+    QByteArray state = s.value("window/state").toByteArray();
+    if (!state.isEmpty()) restoreState(state);
 }
 
 void MainWindow::setProjectFolder(const QString &path)

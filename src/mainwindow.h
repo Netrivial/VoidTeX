@@ -57,6 +57,9 @@ private:
     void createCentralAndDocks();
     void createStatusBar();
 
+    void saveWindowState();
+    void restoreWindowState();
+
     bool maybeSave();
     bool loadFile(const QString &path);
     bool saveToDisk(const QString &path);
