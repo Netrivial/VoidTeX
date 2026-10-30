@@ -77,6 +77,7 @@ inline constexpr auto AutoCompileOnSave = "compiler/autoCompileOnSave";
 inline constexpr auto RecentFiles       = "files/recent";
 inline constexpr auto LastDirectory     = "files/lastDirectory";
 inline constexpr auto LastProjectDir    = "files/lastProjectDir";
+inline constexpr auto RootFile          = "project/rootFile";
 
 inline constexpr auto ShowWelcomeScreen = "startup/showWelcomeScreen";
 }

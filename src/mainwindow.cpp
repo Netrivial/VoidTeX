@@ -175,6 +175,13 @@ void MainWindow::createCentralAndDocks()
         if (!maybeSave()) return;
         loadFile(path);
     });
+
+    connect(m_fileTree, &FileTree::setAsRootRequested, this, [this](const QString &path) {
+        m_rootFilePath = path;
+        m_fileTree->setRootFile(path);
+        SettingsManager::instance().setValue(SettingsKeys::RootFile, path);
+        statusBar()->showMessage(tr("Корневой файл установлен: %1").arg(QFileInfo(path).fileName()), 3000);
+    });
 }
 
 void MainWindow::createActions()
@@ -362,14 +369,21 @@ void MainWindow::onSettings()
 
 void MainWindow::onCompile()
 {
-    if (m_currentFilePath.isEmpty()) {
+    QString fileToCompile = m_currentFilePath;
+
+    if (!m_rootFilePath.isEmpty() && QFileInfo::exists(m_rootFilePath)) {
+        fileToCompile = m_rootFilePath;
+    }
+
+    if (fileToCompile.isEmpty()) {
         statusBar()->showMessage(tr("Сначала сохраните файл."), 3000);
         onSaveAs();
         if (m_currentFilePath.isEmpty())
             return;
+        fileToCompile = m_currentFilePath;
     }
 
-    if (m_editor->document()->isModified()) {
+    if (m_editor->document()->isModified() && !m_currentFilePath.isEmpty()) {
         if (!saveToDisk(m_currentFilePath))
             return;
     }
@@ -380,16 +394,14 @@ void MainWindow::onCompile()
     }
 
     m_log->clear();
-    m_log->appendInfo(tr("=== Компиляция: %1 ===").arg(m_currentFilePath));
+    m_log->appendInfo(tr("=== Компиляция: %1 ===").arg(QFileInfo(fileToCompile).fileName()));
 
     if (SettingsManager::instance().boolValue(SettingsKeys::ShowLogsOnCompile, true)) {
         m_logDock->show();
         m_logDock->raise();
     }
 
-    m_editor->clearErrorLine();
-
-    const auto job = m_compiler->makeDefaultJob(m_currentFilePath);
+    const auto job = m_compiler->makeDefaultJob(fileToCompile);
     m_compiler->run(job);
 }
 
@@ -655,7 +667,12 @@ void MainWindow::setProjectFolder(const QString &path)
     m_fileTree->setRootPath(path);
     m_projectDock->show();
 
-    SettingsManager::instance().setValue(SettingsKeys::LastProjectDir, path);
+    m_rootFilePath = SettingsManager::instance().stringValue(SettingsKeys::RootFile);
+    if (!m_rootFilePath.isEmpty() && QFileInfo::exists(m_rootFilePath)) {
+        m_fileTree->setRootFile(m_rootFilePath);
+    } else {
+        m_rootFilePath.clear();
+    }
 }
 
 void MainWindow::updateWindowTitle()

@@ -72,6 +72,7 @@ private:
 
     void setProjectFolder(const QString &path);
     QString m_currentProjectDir;
+    QString m_rootFilePath;
 
     // Actions
     QAction *m_actionNew            = nullptr;

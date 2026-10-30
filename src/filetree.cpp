@@ -2,6 +2,7 @@
 #include <QFileSystemModel>
 #include <QTreeView>
 #include <QVBoxLayout>
+#include <QMenu>
 
 FileTree::FileTree(QWidget *parent)
     : QWidget(parent)
@@ -26,6 +27,9 @@ FileTree::FileTree(QWidget *parent)
     layout->addWidget(m_view);
 
     connect(m_view, &QTreeView::doubleClicked, this, &FileTree::onDoubleClicked);
+
+    m_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_view, &QTreeView::customContextMenuRequested, this, &FileTree::onContextMenuRequested);
 }
 
 void FileTree::setRootPath(const QString &path)
@@ -44,4 +48,25 @@ void FileTree::onDoubleClicked(const QModelIndex &index)
 
     QString filePath = m_model->filePath(index);
     emit fileDoubleClicked(filePath);
+}
+
+void FileTree::onContextMenuRequested(const QPoint &pos)
+{
+    QModelIndex index = m_view->indexAt(pos);
+    if (!index.isValid() || m_model->isDir(index)) return;
+
+    QString filePath = m_model->filePath(index);
+
+    QMenu menu(this);
+    QAction *setRootAction = menu.addAction(tr("Сделать корневым файлом"));
+
+    QAction *selected = menu.exec(m_view->viewport()->mapToGlobal(pos));
+    if (selected == setRootAction) {
+        emit setAsRootRequested(filePath);
+    }
+}
+
+void FileTree::setRootFile(const QString &path)
+{
+    Q_UNUSED(path);
 }
