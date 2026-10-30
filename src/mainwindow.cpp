@@ -141,12 +141,13 @@ void MainWindow::createCentralAndDocks()
     m_log = new LogPanel(this);
 
     connect(m_log, &LogPanel::messageClicked, this, [this](const QString &file, int line) {
-        if (QFileInfo(file).fileName() == QFileInfo(m_currentFilePath).fileName()) {
-            m_editor->gotoLine(line);
-            m_editor->setErrorLine(line);
-        } else {
-            statusBar()->showMessage(tr("Ошибка в другом файле: %1, строка %2").arg(file).arg(line), 5000);
+        if (QFileInfo(file).absoluteFilePath() != QFileInfo(m_currentFilePath).absoluteFilePath()) {
+            if (!maybeSave()) return;
+            loadFile(file);
         }
+
+        m_editor->gotoLine(line);
+        m_editor->setErrorLine(line);
     });
 
     m_logDock = new QDockWidget(tr("Logs"), this);
@@ -168,6 +169,7 @@ void MainWindow::createCentralAndDocks()
     m_projectDock = new QDockWidget(tr("Project"), this);
     m_projectDock->setObjectName("ProjectDock");
     m_projectDock->setWidget(m_fileTree);
+    m_projectDock->setMinimumWidth(180);
     addDockWidget(Qt::LeftDockWidgetArea, m_projectDock);
     m_projectDock->hide();
 
@@ -484,7 +486,9 @@ bool MainWindow::loadFile(const QString &path)
     in.setEncoding(QStringConverter::Utf8);
     m_centralStack->setCurrentWidget(m_editor);
     m_editor->setPlainText(in.readAll());
-    showPdfPreview("");
+    if (m_currentProjectDir.isEmpty() || !path.startsWith(m_currentProjectDir)) {
+        showPdfPreview("");
+    }
     m_editor->document()->setModified(false);
 
     m_currentFilePath = path;
