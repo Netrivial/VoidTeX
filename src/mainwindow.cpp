@@ -141,9 +141,21 @@ void MainWindow::createCentralAndDocks()
     m_log = new LogPanel(this);
 
     connect(m_log, &LogPanel::messageClicked, this, [this](const QString &file, int line) {
-        if (QFileInfo(file).absoluteFilePath() != QFileInfo(m_currentFilePath).absoluteFilePath()) {
+        QString absolutePath = file;
+        if (QFileInfo(file).isRelative()) {
+            QString baseDir = m_currentProjectDir.isEmpty()
+                                  ? QFileInfo(m_currentFilePath).absolutePath()
+                                  : m_currentProjectDir;
+            absolutePath = QDir(baseDir).absoluteFilePath(file);
+        }
+        absolutePath = QFileInfo(absolutePath).absoluteFilePath();
+
+        if (absolutePath != QFileInfo(m_currentFilePath).absoluteFilePath()) {
             if (!maybeSave()) return;
-            loadFile(file);
+
+            if (!loadFile(absolutePath)) {
+                return;
+            }
         }
 
         m_editor->gotoLine(line);
@@ -480,6 +492,13 @@ bool MainWindow::loadFile(const QString &path)
                              tr("Не удалось открыть файл:\n%1\n\n%2")
                                  .arg(path, file.errorString()));
         return false;
+    }
+
+    if (!m_currentProjectDir.isEmpty() && !path.startsWith(m_currentProjectDir)) {
+        m_rootFilePath.clear();
+        m_currentProjectDir.clear();
+        m_projectDock->hide();
+        SettingsManager::instance().setValue(SettingsKeys::RootFile, "");
     }
 
     QTextStream in(&file);
