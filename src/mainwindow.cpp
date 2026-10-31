@@ -196,6 +196,11 @@ void MainWindow::createCentralAndDocks()
         SettingsManager::instance().setValue(SettingsKeys::RootFile, path);
         statusBar()->showMessage(tr("Корневой файл установлен: %1").arg(QFileInfo(path).fileName()), 3000);
     });
+
+    connect(m_fileTree, &FileTree::fileCreated, this, [this](const QString &path) {
+        if (!maybeSave()) return;
+        loadFile(path);
+    });
 }
 
 void MainWindow::createActions()

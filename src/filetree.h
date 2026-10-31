@@ -2,6 +2,7 @@
 #define FILETREE_H
 
 #include <QWidget>
+#include <QMouseEvent>
 
 class QFileSystemModel;
 class QTreeView;
@@ -20,6 +21,7 @@ public:
 signals:
     void fileDoubleClicked(const QString &path);
     void setAsRootRequested(const QString &path);
+    void fileCreated(const QString &path);
 
 private slots:
     void onDoubleClicked(const QModelIndex &index);
