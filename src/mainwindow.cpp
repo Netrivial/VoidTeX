@@ -497,8 +497,12 @@ bool MainWindow::loadFile(const QString &path)
     if (!m_currentProjectDir.isEmpty() && !path.startsWith(m_currentProjectDir)) {
         m_rootFilePath.clear();
         m_currentProjectDir.clear();
+
+        m_fileTree->clear();
+
         m_projectDock->hide();
         SettingsManager::instance().setValue(SettingsKeys::RootFile, "");
+        SettingsManager::instance().setValue(SettingsKeys::LastProjectDir, "");
     }
 
     QTextStream in(&file);

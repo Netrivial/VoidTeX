@@ -15,6 +15,7 @@ public:
 
     void setRootPath(const QString &path);
     void setRootFile(const QString &path);
+    void clear();
 
 signals:
     void fileDoubleClicked(const QString &path);

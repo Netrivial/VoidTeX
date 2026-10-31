@@ -70,3 +70,8 @@ void FileTree::setRootFile(const QString &path)
 {
     Q_UNUSED(path);
 }
+
+void FileTree::clear()
+{
+    m_view->setRootIndex(QModelIndex());
+}
