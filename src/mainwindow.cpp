@@ -202,20 +202,38 @@ void MainWindow::createCentralAndDocks()
         loadFile(path);
     });
 
-    connect(m_fileTree, &FileTree::fileDeleted, this, [this](const QString &path) {
-        if (QFileInfo(path).absoluteFilePath() == QFileInfo(m_currentFilePath).absoluteFilePath()) {
+    connect(m_fileTree, &FileTree::fileDeleted, this, [this](const QString &deletedPath) {
+        auto isAffected = [&](const QString &filePath) {
+            if (filePath.isEmpty()) return false;
+            return filePath == deletedPath ||
+                   filePath.startsWith(deletedPath + "/") ||
+                   filePath.startsWith(deletedPath + "\\");
+        };
+
+        if (isAffected(m_currentFilePath)) {
             m_currentFilePath.clear();
             m_editor->clear();
             updateWindowTitle();
             m_centralStack->setCurrentWidget(m_welcomePage);
             clearPdfPreview();
             m_pdfDock->hide();
+            m_log->clear();
+            m_logDock->hide();
         }
-        if (QFileInfo(path).absoluteFilePath() == QFileInfo(m_rootFilePath).absoluteFilePath()) {
+
+        if (isAffected(m_rootFilePath)) {
             m_rootFilePath.clear();
             SettingsManager::instance().setValue(SettingsKeys::RootFile, "");
         }
-        if (m_recentFiles.removeAll(path) > 0) {
+
+        bool changed = false;
+        for (int i = m_recentFiles.size() - 1; i >= 0; --i) {
+            if (isAffected(m_recentFiles[i])) {
+                m_recentFiles.removeAt(i);
+                changed = true;
+            }
+        }
+        if (changed) {
             SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
             updateRecentFilesMenu();
         }
