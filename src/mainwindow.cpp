@@ -201,6 +201,53 @@ void MainWindow::createCentralAndDocks()
         if (!maybeSave()) return;
         loadFile(path);
     });
+
+    connect(m_fileTree, &FileTree::fileDeleted, this, [this](const QString &path) {
+        if (QFileInfo(path).absoluteFilePath() == QFileInfo(m_currentFilePath).absoluteFilePath()) {
+            m_currentFilePath.clear();
+            m_editor->clear();
+            updateWindowTitle();
+            m_centralStack->setCurrentWidget(m_welcomePage);
+            clearPdfPreview();
+            m_pdfDock->hide();
+        }
+        if (QFileInfo(path).absoluteFilePath() == QFileInfo(m_rootFilePath).absoluteFilePath()) {
+            m_rootFilePath.clear();
+            SettingsManager::instance().setValue(SettingsKeys::RootFile, "");
+        }
+        if (m_recentFiles.removeAll(path) > 0) {
+            SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
+            updateRecentFilesMenu();
+        }
+    });
+
+    connect(m_fileTree, &FileTree::fileRenamed, this, [this](const QString &oldPath, const QString &newPath) {
+        auto updatePath = [&](QString &path) {
+            if (path == oldPath || path.startsWith(oldPath + "/") || path.startsWith(oldPath + "\\")) {
+                path.replace(0, oldPath.length(), newPath);
+            }
+        };
+
+        updatePath(m_currentFilePath);
+        updateWindowTitle();
+
+        updatePath(m_rootFilePath);
+        if (!m_rootFilePath.isEmpty()) {
+            SettingsManager::instance().setValue(SettingsKeys::RootFile, m_rootFilePath);
+        }
+
+        bool changed = false;
+        for (int i = 0; i < m_recentFiles.size(); ++i) {
+            if (m_recentFiles[i] == oldPath || m_recentFiles[i].startsWith(oldPath + "/") || m_recentFiles[i].startsWith(oldPath + "\\")) {
+                m_recentFiles[i].replace(0, oldPath.length(), newPath);
+                changed = true;
+            }
+        }
+        if (changed) {
+            SettingsManager::instance().setValue(SettingsKeys::RecentFiles, m_recentFiles);
+            updateRecentFilesMenu();
+        }
+    });
 }
 
 void MainWindow::createActions()

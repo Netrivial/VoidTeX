@@ -1,10 +1,13 @@
 #include "filetree.h"
+
 #include <QFileSystemModel>
 #include <QTreeView>
 #include <QVBoxLayout>
 #include <QMenu>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QDir>
+#include <QFileInfo>
 
 FileTree::FileTree(QWidget *parent)
     : QWidget(parent)
@@ -55,80 +58,146 @@ void FileTree::onDoubleClicked(const QModelIndex &index)
 void FileTree::onContextMenuRequested(const QPoint &pos)
 {
     QModelIndex index = m_view->indexAt(pos);
-
     QString currentDir;
-    QString selectedFile;
+    QString selectedPath;
     bool isDir = false;
 
     if (index.isValid()) {
-        currentDir = m_model->filePath(index);
+        selectedPath = m_model->filePath(index);
         isDir = m_model->isDir(index);
-        if (!isDir) {
-            selectedFile = currentDir;
-            currentDir = QFileInfo(currentDir).absolutePath();
-        }
+        currentDir = isDir ? selectedPath : QFileInfo(selectedPath).absolutePath();
     } else {
         currentDir = m_model->filePath(m_view->rootIndex());
     }
 
     QMenu menu(this);
 
+    // ==========================================
+    // ВЕТКА 1: КЛИК ПО ПАПКЕ ИЛИ ПУСТОМУ МЕСТУ
+    // ==========================================
     if (isDir || !index.isValid()) {
-        QAction *actNewTex = menu.addAction(tr("Создать файл .tex"));
-        QAction *actNewBib = menu.addAction(tr("Создать файл .bib"));
+        QMenu *createMenu = menu.addMenu(tr("Создать"));
+
+        QAction *actQuickTex = createMenu->addAction(tr("Быстро: файл .tex"));
+        QAction *actQuickBib = createMenu->addAction(tr("Быстро: файл .bib"));
+        createMenu->addSeparator();
+        QAction *actNewFile  = createMenu->addAction(tr("Другой файл..."));
+
         QAction *actNewDir = menu.addAction(tr("Создать папку"));
-        menu.addSeparator();
+
+        QAction *actRenameDir = nullptr;
+        QAction *actDeleteDir = nullptr;
+        if (isDir) {
+            menu.addSeparator();
+            actRenameDir = menu.addAction(tr("Переименовать папку"));
+            actDeleteDir = menu.addAction(tr("Удалить папку"));
+        }
 
         QAction *selected = menu.exec(m_view->viewport()->mapToGlobal(pos));
 
-        if (selected == actNewTex || selected == actNewBib || selected == actNewDir) {
-            bool ok;
-            QString name;
+        if (!selected) return;
 
-            if (selected == actNewDir) {
-                name = QInputDialog::getText(this, tr("Новая папка"), tr("Имя папки:"), QLineEdit::Normal, "", &ok);
-                if (ok && !name.isEmpty()) {
-                    QDir(currentDir).mkdir(name);
-                }
-            } else {
-                QString filter = (selected == actNewTex) ? ".tex" : ".bib";
-                name = QInputDialog::getText(this, tr("Новый файл"), tr("Имя файла:"), QLineEdit::Normal, "untitled" + filter, &ok);
-                if (ok && !name.isEmpty()) {
-                    if (!name.endsWith(filter)) name += filter;
-                    QString newFilePath = QDir(currentDir).filePath(name);
+        bool ok;
+        QString name;
 
-                    QFile f(newFilePath);
-                    if (f.open(QIODevice::WriteOnly)) {
-                        f.close();
-                        emit fileCreated(newFilePath);
-                    } else {
-                        QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось создать файл."));
-                    }
+        // --- Обработка создания файлов ---
+        if (selected == actQuickTex || selected == actQuickBib) {
+            QString ext = (selected == actQuickTex) ? ".tex" : ".bib";
+            name = QInputDialog::getText(this, tr("Новый файл"),
+                                         tr("Имя файла (без расширения %1):").arg(ext),
+                                         QLineEdit::Normal, "untitled", &ok);
+            if (ok && !name.isEmpty()) {
+                QString newFilePath = QDir(currentDir).filePath(name + ext);
+                QFile f(newFilePath);
+                if (f.open(QIODevice::WriteOnly)) {
+                    f.close();
+                    emit fileCreated(newFilePath);
+                } else {
+                    QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось создать файл."));
                 }
             }
         }
-    } else {
+        else if (selected == actNewFile) {
+            name = QInputDialog::getText(this, tr("Новый файл"),
+                                         tr("Полное имя файла (с расширением):"),
+                                         QLineEdit::Normal, "untitled.txt", &ok);
+            if (ok && !name.isEmpty()) {
+                QString newFilePath = QDir(currentDir).filePath(name);
+                QFile f(newFilePath);
+                if (f.open(QIODevice::WriteOnly)) {
+                    f.close();
+                    emit fileCreated(newFilePath);
+                } else {
+                    QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось создать файл."));
+                }
+            }
+        }
+        // --- Обработка создания папки ---
+        else if (selected == actNewDir) {
+            name = QInputDialog::getText(this, tr("Новая папка"), tr("Имя папки:"), QLineEdit::Normal, "", &ok);
+            if (ok && !name.isEmpty()) {
+                QDir(currentDir).mkdir(name);
+            }
+        }
+        // --- Обработка переименования папки ---
+        else if (selected == actRenameDir) {
+            QString newName = QInputDialog::getText(this, tr("Переименовать"),
+                                                    tr("Новое имя:"), QLineEdit::Normal,
+                                                    QFileInfo(selectedPath).fileName(), &ok);
+            if (ok && !newName.isEmpty()) {
+                QString parentDir = QFileInfo(selectedPath).absolutePath();
+                QString newPath = QDir(parentDir).filePath(newName);
+
+                if (QDir().rename(selectedPath, newPath)) {
+                    emit fileRenamed(selectedPath, newPath);
+                }
+            }
+        }
+        // --- Обработка удаления папки ---
+        else if (selected == actDeleteDir) {
+            auto reply = QMessageBox::question(this, tr("Удалить"),
+                                               tr("Удалить папку %1 и всё её содержимое?").arg(QFileInfo(selectedPath).fileName()));
+            if (reply == QMessageBox::Yes) {
+                QDir(selectedPath).removeRecursively();
+                emit fileDeleted(selectedPath);
+            }
+        }
+    }
+    // ==========================================
+    // ВЕТКА 2: КЛИК ПО ФАЙЛУ
+    // ==========================================
+    else {
         QAction *actSetRoot = menu.addAction(tr("Сделать корневым файлом"));
         menu.addSeparator();
         QAction *actRename = menu.addAction(tr("Переименовать"));
-        QAction *actDelete = menu.addAction(tr("Удалить"));
+        QAction *actDelete = menu.addAction(tr("Удалить файл"));
 
         QAction *selected = menu.exec(m_view->viewport()->mapToGlobal(pos));
 
+        if (!selected) return;
+
         if (selected == actSetRoot) {
-            emit setAsRootRequested(selectedFile);
+            emit setAsRootRequested(selectedPath);
         }
         else if (selected == actRename) {
+            QFileInfo fi(selectedPath);
             bool ok;
-            QString newName = QInputDialog::getText(this, tr("Переименовать"), tr("Новое имя:"), QLineEdit::Normal, QFileInfo(selectedFile).fileName(), &ok);
-            if (ok && !newName.isEmpty()) {
-                QFile::rename(selectedFile, QDir(currentDir).filePath(newName));
+            QString newBaseName = QInputDialog::getText(this, tr("Переименовать"),
+                                                        tr("Новое имя (без расширения .%1):").arg(fi.suffix()),
+                                                        QLineEdit::Normal, fi.completeBaseName(), &ok);
+            if (ok && !newBaseName.isEmpty()) {
+                QString newPath = QDir(currentDir).filePath(newBaseName + "." + fi.suffix());
+                if (QFile::rename(selectedPath, newPath)) {
+                    emit fileRenamed(selectedPath, newPath);
+                }
             }
         }
         else if (selected == actDelete) {
-            auto reply = QMessageBox::question(this, tr("Удалить файл"), tr("Вы уверены, что хотите удалить %1?").arg(QFileInfo(selectedFile).fileName()));
+            auto reply = QMessageBox::question(this, tr("Удалить файл"),
+                                               tr("Вы уверены, что хотите удалить %1?").arg(QFileInfo(selectedPath).fileName()));
             if (reply == QMessageBox::Yes) {
-                QFile::remove(selectedFile);
+                QFile::remove(selectedPath);
+                emit fileDeleted(selectedPath);
             }
         }
     }

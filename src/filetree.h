@@ -22,6 +22,8 @@ signals:
     void fileDoubleClicked(const QString &path);
     void setAsRootRequested(const QString &path);
     void fileCreated(const QString &path);
+    void fileDeleted(const QString &path);
+    void fileRenamed(const QString &oldPath, const QString &newPath);
 
 private slots:
     void onDoubleClicked(const QModelIndex &index);
