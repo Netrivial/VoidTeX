@@ -185,6 +185,29 @@ QMenu::separator {
     selection-color: %2;
 }
 
+/* ==== Меню поиска ==== */
+#SearchWidget {
+    background-color: %3;
+    border-top: 1px solid %4;
+}
+#SearchWidget QLineEdit {
+    background-color: %1;
+    color: %2;
+    border: 1px solid %4;
+    padding: 4px;
+    border-radius: 3px;
+}
+#SearchWidget QPushButton {
+    background-color: %3;
+    color: %2;
+    border: 1px solid %4;
+    padding: 4px 12px;
+    border-radius: 3px;
+}
+#SearchWidget QPushButton:hover {
+    background-color: %5;
+}
+
 /* ==== Тулбар и статусбар ==== */
 QToolBar {
     background-color: %3;

@@ -7,7 +7,9 @@
 #include "compiler.h"
 #include "pdfpreview.h"
 #include "filetree.h"
+#include "searchwidget.h"
 
+#include <QLayout>
 #include <QStackedWidget>
 #include <QAction>
 #include <QApplication>
@@ -107,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (showWelcome && m_currentFilePath.isEmpty()) {
         m_centralStack->setCurrentWidget(m_welcomePage);
     } else {
-        m_centralStack->setCurrentWidget(m_editor);
+        m_centralStack->setCurrentIndex(1);
     }
 
     QString lastDir = SettingsManager::instance().stringValue(SettingsKeys::LastProjectDir);
@@ -120,16 +122,28 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::createCentralAndDocks()
 {
+    // --- Central Stack ---
     m_centralStack = new QStackedWidget(this);
 
-    m_editor = new Editor(this);
     m_welcomePage = new WelcomePage(this);
 
+    auto *editorContainer = new QWidget(this);
+    auto *editorLayout = new QVBoxLayout(editorContainer);
+    editorLayout->setContentsMargins(0, 0, 0, 0);
+    editorLayout->setSpacing(0);
+
+    m_editor = new Editor(this);
+    m_searchWidget = new SearchWidget(this);
+
+    editorLayout->addWidget(m_editor);
+    editorLayout->addWidget(m_searchWidget);
+
     m_centralStack->addWidget(m_welcomePage);
-    m_centralStack->addWidget(m_editor);
+    m_centralStack->addWidget(editorContainer);
 
     setCentralWidget(m_centralStack);
 
+    // --- Connections для WelcomePage ---
     connect(m_welcomePage, &WelcomePage::newFileRequested, this, &MainWindow::onNew);
     connect(m_welcomePage, &WelcomePage::openFileRequested, this, &MainWindow::onOpen);
     connect(m_welcomePage, &WelcomePage::settingsRequested, this, &MainWindow::onSettings);
@@ -138,26 +152,25 @@ void MainWindow::createCentralAndDocks()
         loadFile(path);
     });
 
+    // --- Log Panel ---
     m_log = new LogPanel(this);
 
     connect(m_log, &LogPanel::messageClicked, this, [this](const QString &file, int line) {
         QString absolutePath = file;
         if (QFileInfo(file).isRelative()) {
             QString baseDir = m_currentProjectDir.isEmpty()
-                                  ? QFileInfo(m_currentFilePath).absolutePath()
-                                  : m_currentProjectDir;
+            ? QFileInfo(m_currentFilePath).absolutePath()
+            : m_currentProjectDir;
             absolutePath = QDir(baseDir).absoluteFilePath(file);
         }
         absolutePath = QFileInfo(absolutePath).absoluteFilePath();
 
         if (absolutePath != QFileInfo(m_currentFilePath).absoluteFilePath()) {
             if (!maybeSave()) return;
-
             if (!loadFile(absolutePath)) {
                 return;
             }
         }
-
         m_editor->gotoLine(line);
         m_editor->setErrorLine(line);
     });
@@ -169,6 +182,7 @@ void MainWindow::createCentralAndDocks()
     addDockWidget(Qt::BottomDockWidgetArea, m_logDock);
     m_logDock->hide();
 
+    // --- Pdf Preview ---
     m_pdfPreview = new PdfPreview(this);
 
     m_pdfDock = new QDockWidget(tr("PDF Preview"), this);
@@ -177,6 +191,7 @@ void MainWindow::createCentralAndDocks()
     m_pdfDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, m_pdfDock);
 
+    // --- File Tree ---
     m_fileTree = new FileTree(this);
     m_projectDock = new QDockWidget(tr("Project"), this);
     m_projectDock->setObjectName("ProjectDock");
@@ -266,6 +281,15 @@ void MainWindow::createCentralAndDocks()
             updateRecentFilesMenu();
         }
     });
+
+    // --- Search Widget ---
+    connect(m_searchWidget, &SearchWidget::findNext, m_editor, &Editor::search);
+    connect(m_searchWidget, &SearchWidget::replaceCurrent, this, [this](const QString &t, const QString &r, bool c) {
+        m_editor->replace(t, r, c, false);
+    });
+    connect(m_searchWidget, &SearchWidget::replaceAll, this, [this](const QString &t, const QString &r, bool c) {
+        m_editor->replace(t, r, c, true);
+    });
 }
 
 void MainWindow::createActions()
@@ -297,7 +321,7 @@ void MainWindow::createActions()
     m_actionExit->setShortcut(QKeySequence::Quit);
     connect(m_actionExit, &QAction::triggered, this, &QWidget::close);
 
-    // --- Settings (edit) ---
+    // --- Settings (E  dit) ---
     m_actionSettings = new QAction(tr("&Settings..."), this);
     m_actionSettings->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
     m_actionSettings->setStatusTip(tr("Открыть настройки приложения"));
@@ -328,10 +352,18 @@ void MainWindow::createActions()
     m_actionAboutQt = new QAction(tr("About &Qt"), this);
     connect(m_actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
-    // --- File tree ---
+    // --- File Tree ---
     m_actionOpenFolder = new QAction(tr("Open &Folder..."), this);
     m_actionOpenFolder->setShortcut(QKeySequence("Ctrl+Shift+O"));
     connect(m_actionOpenFolder, &QAction::triggered, this, &MainWindow::onOpenFolder);
+
+    // --- Search Widget ---
+    m_actionFind = new QAction(tr("&Find..."), this);
+    m_actionFind->setShortcut(QKeySequence::Find);
+    connect(m_actionFind, &QAction::triggered, this, [this]() {
+        if (m_centralStack->currentWidget() == m_welcomePage) return;
+        m_searchWidget->showAndFocus();
+    });
 }
 
 void MainWindow::createMenus()
@@ -350,6 +382,7 @@ void MainWindow::createMenus()
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(m_actionSettings);
+    editMenu->addAction(m_actionFind);
 
     QMenu *buildMenu = menuBar()->addMenu(tr("&Build"));
     buildMenu->addAction(m_actionCompile);
@@ -388,7 +421,7 @@ void MainWindow::onNew()
 {
     if (!maybeSave()) return;
 
-    m_centralStack->setCurrentWidget(m_editor);
+    m_centralStack->setCurrentIndex(1);
 
     QString tmpl = SettingsManager::instance().stringValue(SettingsKeys::NewFileTemplate);
     if (tmpl.isEmpty()) {
@@ -577,7 +610,7 @@ bool MainWindow::loadFile(const QString &path)
 
     QTextStream in(&file);
     in.setEncoding(QStringConverter::Utf8);
-    m_centralStack->setCurrentWidget(m_editor);
+    m_centralStack->setCurrentIndex(1);
     m_editor->setPlainText(in.readAll());
     if (m_currentProjectDir.isEmpty() || !path.startsWith(m_currentProjectDir)) {
         showPdfPreview("");

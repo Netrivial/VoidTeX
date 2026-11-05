@@ -37,6 +37,9 @@ public:
     void setErrorLine(int line);
     void clearErrorLine();
 
+    bool search(const QString &text, bool forward, bool caseSensitive);
+    void replace(const QString &text, const QString &replaceWith, bool caseSensitive, bool all);
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
 

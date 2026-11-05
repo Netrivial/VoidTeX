@@ -133,6 +133,59 @@ void Editor::clearErrorLine()
     highlightCurrentLine();
 }
 
+bool Editor::search(const QString &text, bool forward, bool caseSensitive)
+{
+    if (text.isEmpty()) return false;
+
+    QTextDocument::FindFlags flags;
+    if (!forward) flags |= QTextDocument::FindBackward;
+    if (caseSensitive) flags |= QTextDocument::FindCaseSensitively;
+
+    bool found = find(text, flags);
+
+    if (!found) {
+        QTextCursor cursor = textCursor();
+        cursor.movePosition(forward ? QTextCursor::Start : QTextCursor::End);
+        setTextCursor(cursor);
+        found = find(text, flags);
+    }
+    return found;
+}
+
+void Editor::replace(const QString &text, const QString &replaceWith, bool caseSensitive, bool all)
+{
+    if (text.isEmpty()) return;
+
+    QTextCursor cursor = textCursor();
+    QTextDocument::FindFlags flags;
+    if (caseSensitive) flags |= QTextDocument::FindCaseSensitively;
+
+    if (!all) {
+        if (cursor.hasSelection() && cursor.selectedText() == text) {
+            cursor.insertText(replaceWith);
+        }
+        search(text, true, caseSensitive);
+        return;
+    }
+
+    cursor.beginEditBlock();
+    cursor.movePosition(QTextCursor::Start);
+
+    int count = 0;
+    while (find(text, flags)) {
+        textCursor().insertText(replaceWith);
+        count++;
+    }
+    cursor.endEditBlock();
+
+    cursor.movePosition(QTextCursor::Start);
+    setTextCursor(cursor);
+
+    if (parent()) {
+        // it must do something...
+    }
+}
+
 void Editor::resizeEvent(QResizeEvent *event)
 {
     QPlainTextEdit::resizeEvent(event);

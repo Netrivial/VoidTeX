@@ -19,6 +19,7 @@ class Editor;
 class Compiler;
 class PdfPreview;
 class FileTree;
+class SearchWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -87,6 +88,7 @@ private:
     QAction *m_actionOpenPdf        = nullptr;
     QAction *m_actionSettings       = nullptr;
     QAction *m_actionOpenFolder     = nullptr;
+    QAction *m_actionFind           = nullptr;
 
     // Widgets
     Editor         *m_editor        = nullptr;
@@ -97,6 +99,7 @@ private:
     QDockWidget    *m_pdfDock       = nullptr;
     QDockWidget    *m_projectDock   = nullptr;
     QStackedWidget *m_centralStack  = nullptr;
+    SearchWidget   *m_searchWidget  = nullptr;
 
     // Toolbar
     QToolBar *m_mainToolBar         = nullptr;
@@ -108,10 +111,10 @@ private:
     QString     m_currentFilePath;
     QStringList m_recentFiles;
 
-    //Welcome page
+    //Welcome Page
     WelcomePage    *m_welcomePage   = nullptr;
 
-    // File tree
+    // File Tree
     FileTree       *m_fileTree      = nullptr;
 
     static constexpr int MaxRecentFiles = 10;
