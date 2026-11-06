@@ -156,34 +156,32 @@ void Editor::replace(const QString &text, const QString &replaceWith, bool caseS
 {
     if (text.isEmpty()) return;
 
-    QTextCursor cursor = textCursor();
     QTextDocument::FindFlags flags;
     if (caseSensitive) flags |= QTextDocument::FindCaseSensitively;
 
     if (!all) {
-        if (cursor.hasSelection() && cursor.selectedText() == text) {
-            cursor.insertText(replaceWith);
+        QTextCursor cursor = textCursor();
+        if (cursor.hasSelection()) {
+            Qt::CaseSensitivity cs = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+            if (cursor.selectedText().compare(text, cs) == 0) {
+                cursor.insertText(replaceWith);
+            }
         }
         search(text, true, caseSensitive);
         return;
     }
 
-    cursor.beginEditBlock();
+    QTextCursor cursor = textCursor();
     cursor.movePosition(QTextCursor::Start);
+    setTextCursor(cursor);
 
+    textCursor().beginEditBlock();
     int count = 0;
     while (find(text, flags)) {
         textCursor().insertText(replaceWith);
         count++;
     }
-    cursor.endEditBlock();
-
-    cursor.movePosition(QTextCursor::Start);
-    setTextCursor(cursor);
-
-    if (parent()) {
-        // it must do something...
-    }
+    textCursor().endEditBlock();
 }
 
 void Editor::resizeEvent(QResizeEvent *event)
